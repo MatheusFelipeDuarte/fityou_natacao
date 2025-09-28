@@ -95,7 +95,8 @@ temp/
 *.crt
 *.cer
 *.p8
-
+tools/admin/serviceAccountKey.json
+tools/admin/
 # IDE specific
 .vscode/settings.json
 .vscode/launch.json

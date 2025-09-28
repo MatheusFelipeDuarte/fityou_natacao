@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "722099956137",
+    "project_id": "fit-swim-app",
+    "storage_bucket": "fit-swim-app.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:722099956137:android:bfc5a362db0d69ed1b3cb8",
+        "android_client_info": {
+          "package_name": "com.example.fityou_natacao"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBxX6LUok0gWIQDblm4VcOiSP-jJlf194s"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
