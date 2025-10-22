@@ -1,1 +1,8 @@
-{"flutter":{"platforms":{"android":{"default":{"projectId":"fit-swim-app","appId":"1:722099956137:android:bfc5a362db0d69ed1b3cb8","fileOutput":"android/app/google-services.json"}},"dart":{"lib/firebase_options.dart":{"projectId":"fit-swim-app","configurations":{"android":"1:722099956137:android:bfc5a362db0d69ed1b3cb8","ios":"1:722099956137:ios:38d37f2c8f8a2dab1b3cb8","web":"1:722099956137:web:05ce37ef06dfd9be1b3cb8"}}}}}}
+{
+  "functions": {
+    "source": "functions"
+  },
+  "firestore": {
+    "rules": "firebase/firestore.rules"
+  }
+}

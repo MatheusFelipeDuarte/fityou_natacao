@@ -1,0 +1,38 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function hasRole(request, role) {
+      return (request.auth.token.roles is list && request.auth.token.roles.hasAny([role]))
+          || (request.auth.token[role] == true);
+    }
+
+    function isAuthed(request) {
+      return request.auth != null;
+    }
+
+    // Alunos
+    match /students/{docId} {
+      allow read: if isAuthed(request);
+      allow create, update, delete: if isAuthed(request) && (hasRole(request, 'admin') || hasRole(request, 'professor'));
+    }
+
+    // Usuários (se utilizar essa coleção futuramente)
+    match /users/{uid} {
+      allow read: if isAuthed(request) && (request.auth.uid == uid || hasRole(request, 'admin'));
+      allow write: if hasRole(request, 'admin');
+    }
+
+    // Templates de Checklist (apenas admins podem criar/editar)
+    match /checklist_templates/{templateId} {
+      allow read: if isAuthed(request);
+      allow create, update, delete: if isAuthed(request) && hasRole(request, 'admin');
+    }
+
+    // Checklists dos Alunos (professores e admins podem editar)
+    match /student_checklists/{checklistId} {
+      allow read: if isAuthed(request);
+      allow create, update, delete: if isAuthed(request) && (hasRole(request, 'admin') || hasRole(request, 'professor'));
+    }
+  }
+}

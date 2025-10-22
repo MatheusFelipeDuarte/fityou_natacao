@@ -122,5 +122,6 @@ Desktop.ini
 .directory
 .Trash-*
 .nfs*
-
+firebase.json
+macos/Flutter/GeneratedPluginRegistrant.swift
 functions/node_modules/
