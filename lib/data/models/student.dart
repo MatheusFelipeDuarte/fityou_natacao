@@ -1,13 +1,12 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 enum CapLevel {
-  white, // iniciante
+  blue,   // iniciante - Touca Azul
   yellow,
   orange,
-  green,
-  blue,
   red,
   black, // avançado
+  white, // mais avançado - Touca Branca
 }
 
 class Student {
@@ -50,7 +49,7 @@ class Student {
       phone: data['phone'] ?? '',
       level: CapLevel.values.firstWhere(
         (e) => e.name == data['level'],
-        orElse: () => CapLevel.white,
+        orElse: () => CapLevel.blue,
       ),
       age: (data['age'] ?? 0) as int,
       active: (data['active'] ?? true) as bool,

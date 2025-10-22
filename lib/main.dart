@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'theme/app_theme.dart';
 // import 'ui/home_page.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'package:flutter/foundation.dart';
 import 'firebase_options.dart';
 import 'ui/login/login_page.dart';
 import 'ui/students/students_page.dart';
@@ -10,9 +9,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp(
-    options: kIsWeb ? DefaultFirebaseOptions.web : null,
-  );
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   runApp(const MyApp());
 }
 
@@ -24,7 +21,9 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Fit You Natação',
       debugShowCheckedModeBanner: false,
-      theme: AppTheme.light(),
+      theme: AppTheme.dark(), // Tema escuro como principal
+      darkTheme: AppTheme.dark(),
+      themeMode: ThemeMode.dark, // Força o tema escuro
       home: const AuthGate(),
     );
   }

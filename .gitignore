@@ -122,3 +122,5 @@ Desktop.ini
 .directory
 .Trash-*
 .nfs*
+
+functions/node_modules/

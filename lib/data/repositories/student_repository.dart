@@ -23,4 +23,13 @@ class StudentRepository {
   Future<void> addStudent(Student student) async {
     await _col.add(student.toMap());
   }
+
+  Future<void> updateStudent(Student student) async {
+    if (student.id.isEmpty) throw ArgumentError('Student id é obrigatório para atualização');
+    await _col.doc(student.id).update(student.toMap());
+  }
+
+  Future<void> deleteStudent(String id) async {
+    await _col.doc(id).delete();
+  }
 }
