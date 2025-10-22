@@ -87,4 +87,20 @@ class ChecklistRepository {
       });
     });
   }
+
+  /// Stream all checklists for a student across all cap levels
+  Stream<List<StudentChecklist>> streamAllStudentChecklists(String studentId) {
+    return _studentCol
+        .where('studentId', isEqualTo: studentId)
+        .snapshots()
+        .map((snapshot) => snapshot.docs
+            .map((doc) => StudentChecklist.fromDoc(doc))
+            .toList()
+          ..sort((a, b) {
+            // Sort by cap level progression order
+            final aIndex = capProgressionOrder.indexOf(a.cap);
+            final bIndex = capProgressionOrder.indexOf(b.cap);
+            return aIndex.compareTo(bIndex);
+          }));
+  }
 }

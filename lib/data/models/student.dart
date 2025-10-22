@@ -12,30 +12,33 @@ enum CapLevel {
 class Student {
   final String id;
   final String name;
-  final String email;
   final String phone; // apenas números com DDD
   final CapLevel level;
   final int age;
   final bool active;
+  final String? studentCpf; // CPF do aluno (opcional)
+  final String guardianCpf; // CPF do responsável (obrigatório)
 
   Student({
     required this.id,
     required this.name,
-    required this.email,
     required this.phone,
     required this.level,
     required this.age,
     required this.active,
+    this.studentCpf,
+    required this.guardianCpf,
   });
 
   Map<String, dynamic> toMap() {
     return {
       'name': name,
-      'email': email,
       'phone': phone,
       'level': level.name,
       'age': age,
       'active': active,
+      if (studentCpf != null) 'studentCpf': studentCpf,
+      'guardianCpf': guardianCpf,
       'updatedAt': FieldValue.serverTimestamp(),
     };
   }
@@ -45,7 +48,6 @@ class Student {
     return Student(
       id: doc.id,
       name: data['name'] ?? '',
-      email: data['email'] ?? '',
       phone: data['phone'] ?? '',
       level: CapLevel.values.firstWhere(
         (e) => e.name == data['level'],
@@ -53,6 +55,8 @@ class Student {
       ),
       age: (data['age'] ?? 0) as int,
       active: (data['active'] ?? true) as bool,
+      studentCpf: data['studentCpf'] as String?,
+      guardianCpf: (data['guardianCpf'] ?? '') as String,
     );
   }
 }

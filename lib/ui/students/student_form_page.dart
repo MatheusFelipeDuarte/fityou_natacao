@@ -17,9 +17,10 @@ class StudentFormPage extends StatefulWidget {
 class _StudentFormPageState extends State<StudentFormPage> {
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
-  final _emailController = TextEditingController();
   final _phoneController = TextEditingController();
   final _ageController = TextEditingController();
+  final _studentCpfController = TextEditingController();
+  final _guardianCpfController = TextEditingController();
   CapLevel _level = CapLevel.blue;
   bool _active = true;
   bool _busy = false;
@@ -31,9 +32,10 @@ class _StudentFormPageState extends State<StudentFormPage> {
     final s = widget.initial;
     if (s != null) {
       _nameController.text = s.name;
-      _emailController.text = s.email;
       _phoneController.text = s.phone;
       _ageController.text = s.age.toString();
+      _studentCpfController.text = s.studentCpf ?? '';
+      _guardianCpfController.text = s.guardianCpf;
       _level = s.level;
       _active = s.active;
     }
@@ -42,23 +44,74 @@ class _StudentFormPageState extends State<StudentFormPage> {
   @override
   void dispose() {
     _nameController.dispose();
-    _emailController.dispose();
     _phoneController.dispose();
     _ageController.dispose();
+    _studentCpfController.dispose();
+    _guardianCpfController.dispose();
     super.dispose();
+  }
+
+  String? _validateCpf(String? value, {required bool required}) {
+    if (value == null || value.trim().isEmpty) {
+      return required ? 'Informe o CPF' : null;
+    }
+    final cpf = value.replaceAll(RegExp(r'[^\d]'), '');
+    if (cpf.length != 11) {
+      return 'CPF deve ter 11 dígitos';
+    }
+    return null;
+  }
+
+  Future<String?> _validateStudentCpfUnique(String? value) async {
+    // Primeiro valida o formato
+    final formatError = _validateCpf(value, required: false);
+    if (formatError != null) return formatError;
+
+    // Se está vazio, não precisa verificar unicidade (é opcional)
+    if (value == null || value.trim().isEmpty) return null;
+
+    // Verifica se já existe outro aluno com este CPF
+    final isInUse = await _repo.isStudentCpfInUse(
+      value.trim(),
+      excludeId: widget.initial?.id,
+    );
+
+    if (isInUse) {
+      return 'Este CPF já está cadastrado para outro aluno';
+    }
+
+    return null;
   }
 
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
+
+    // Validação assíncrona adicional do CPF do aluno
+    final studentCpfValue = _studentCpfController.text.trim();
+    if (studentCpfValue.isNotEmpty) {
+      final cpfError = await _validateStudentCpfUnique(studentCpfValue);
+      if (cpfError != null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(cpfError),
+            backgroundColor: Colors.red,
+          ),
+        );
+        setState(() => _busy = false);
+        return;
+      }
+    }
+
     setState(() => _busy = true);
     final base = Student(
       id: widget.initial?.id ?? '',
       name: _nameController.text.trim(),
-      email: _emailController.text.trim(),
       phone: _phoneController.text.trim(),
       level: _level,
       age: int.tryParse(_ageController.text.trim()) ?? 0,
       active: _active,
+      studentCpf: studentCpfValue.isEmpty ? null : studentCpfValue,
+      guardianCpf: _guardianCpfController.text.trim(),
     );
     if (widget.initial == null) {
       await _repo.addStudent(base);
@@ -156,21 +209,6 @@ class _StudentFormPageState extends State<StudentFormPage> {
                     ),
                     const SizedBox(height: 16),
                     TextFormField(
-                      controller: _emailController,
-                      decoration: InputDecoration(
-                        labelText: 'E-mail',
-                        prefixIcon: const Icon(Icons.email_outlined),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        filled: true,
-                        fillColor: Colors.grey.shade50,
-                      ),
-                      keyboardType: TextInputType.emailAddress,
-                      validator: (v) => (v == null || v.trim().isEmpty) ? 'Informe o e-mail' : null,
-                    ),
-                    const SizedBox(height: 16),
-                    TextFormField(
                       controller: _phoneController,
                       decoration: InputDecoration(
                         labelText: 'Telefone',
@@ -188,6 +226,40 @@ class _StudentFormPageState extends State<StudentFormPage> {
                         if (x.length < 10) return 'Informe DDD e número';
                         return null;
                       },
+                    ),
+                    const SizedBox(height: 16),
+                    TextFormField(
+                      controller: _studentCpfController,
+                      decoration: InputDecoration(
+                        labelText: 'CPF do Aluno (Opcional)',
+                        hintText: 'XXX.XXX.XXX-XX',
+                        prefixIcon: const Icon(Icons.badge_outlined),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        filled: true,
+                        fillColor: Colors.grey.shade50,
+                        helperText: 'Opcional - deixe em branco se não tiver',
+                      ),
+                      keyboardType: TextInputType.number,
+                      validator: (v) => _validateCpf(v, required: false),
+                    ),
+                    const SizedBox(height: 16),
+                    TextFormField(
+                      controller: _guardianCpfController,
+                      decoration: InputDecoration(
+                        labelText: 'CPF do Responsável *',
+                        hintText: 'XXX.XXX.XXX-XX',
+                        prefixIcon: const Icon(Icons.supervisor_account_outlined),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        filled: true,
+                        fillColor: Colors.grey.shade50,
+                        helperText: '* Campo obrigatório',
+                      ),
+                      keyboardType: TextInputType.number,
+                      validator: (v) => _validateCpf(v, required: true),
                     ),
                     const SizedBox(height: 16),
                     TextFormField(

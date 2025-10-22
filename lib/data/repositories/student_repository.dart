@@ -9,14 +9,26 @@ class StudentRepository {
 
   CollectionReference<Map<String, dynamic>> get _col => _db.collection('students');
 
-  Stream<List<Student>> streamStudents({String? nameQuery}) {
+  Stream<List<Student>> streamStudents({String? nameQuery, bool? activeOnly}) {
     // Consulta básica; otimização por índice pode ser feita depois
     final query = _col.orderBy('name');
     return query.snapshots().map((snap) {
-      final all = snap.docs.map(Student.fromDoc).toList();
+      var all = snap.docs.map(Student.fromDoc).toList();
+
+      // Filtrar por status ativo/inativo
+      if (activeOnly != null) {
+        all = all.where((s) => s.active == activeOnly).toList();
+      }
+
       if (nameQuery == null || nameQuery.isEmpty) return all;
       final q = nameQuery.trim().toLowerCase();
-      return all.where((s) => s.name.toLowerCase().contains(q)).toList();
+      // Busca por nome, CPF do aluno ou CPF do responsável
+      return all.where((s) {
+        final matchName = s.name.toLowerCase().contains(q);
+        final matchStudentCpf = s.studentCpf?.replaceAll(RegExp(r'[^\d]'), '').contains(q.replaceAll(RegExp(r'[^\d]'), '')) ?? false;
+        final matchGuardianCpf = s.guardianCpf.replaceAll(RegExp(r'[^\d]'), '').contains(q.replaceAll(RegExp(r'[^\d]'), ''));
+        return matchName || matchStudentCpf || matchGuardianCpf;
+      }).toList();
     });
   }
 
@@ -31,5 +43,25 @@ class StudentRepository {
 
   Future<void> deleteStudent(String id) async {
     await _col.doc(id).delete();
+  }
+
+  /// Verifica se já existe um aluno com o CPF informado (excluindo o aluno com excludeId se fornecido)
+  Future<bool> isStudentCpfInUse(String cpf, {String? excludeId}) async {
+    if (cpf.isEmpty) return false;
+
+    final cleanCpf = cpf.replaceAll(RegExp(r'[^\d]'), '');
+    if (cleanCpf.isEmpty) return false;
+
+    final snapshot = await _col.where('studentCpf', isEqualTo: cpf).get();
+
+    // Se não encontrou nenhum, o CPF está disponível
+    if (snapshot.docs.isEmpty) return false;
+
+    // Se encontrou, verificar se é do mesmo aluno (no caso de edição)
+    if (excludeId != null) {
+      return snapshot.docs.any((doc) => doc.id != excludeId);
+    }
+
+    return true;
   }
 }

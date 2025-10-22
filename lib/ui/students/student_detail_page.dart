@@ -6,10 +6,12 @@ import 'student_form_page.dart';
 import '../../data/models/checklist.dart';
 import '../../data/repositories/checklist_repository.dart';
 import '../../theme/app_colors.dart';
+import 'student_evaluation_page.dart';
 
 class StudentDetailPage extends StatefulWidget {
-  const StudentDetailPage({super.key, required this.student});
+  const StudentDetailPage({super.key, required this.student, this.showInactiveActions = false});
   final Student student;
+  final bool showInactiveActions; // true quando vindo da página de inativos
 
   @override
   State<StudentDetailPage> createState() => _StudentDetailPageState();
@@ -44,13 +46,21 @@ class _StudentDetailPageState extends State<StudentDetailPage> {
         content: const Text('Tem certeza que deseja remover este aluno? Essa ação não pode ser desfeita.'),
         actions: [
           TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancelar')),
-          TextButton(onPressed: () => Navigator.pop(context, true), child: const Text('Remover')),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Remover', style: TextStyle(color: Colors.red)),
+          ),
         ],
       ),
     );
     if (ok == true) {
       await _repo.deleteStudent(widget.student.id);
-      if (mounted) Navigator.of(context).pop();
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Aluno removido com sucesso')),
+        );
+        Navigator.of(context).pop();
+      }
     }
   }
 
@@ -64,11 +74,6 @@ class _StudentDetailPageState extends State<StudentDetailPage> {
     }
   }
 
-  Future<void> _updateItemProgress(CapLevel cap, String itemId, int score, bool completed) async {
-    final updated = StudentChecklistItemProgress(itemId: itemId, score: score, completed: completed);
-    await _checklistRepo.updateItemProgress(widget.student.id, cap, updated);
-  }
-
   Future<void> _promoteToNextCap() async {
     final next = nextCapLevel(widget.student.level);
     if (next == null) {
@@ -78,11 +83,12 @@ class _StudentDetailPageState extends State<StudentDetailPage> {
     final promoted = Student(
       id: widget.student.id,
       name: widget.student.name,
-      email: widget.student.email,
       phone: widget.student.phone,
       level: next,
       age: widget.student.age,
       active: widget.student.active,
+      studentCpf: widget.student.studentCpf,
+      guardianCpf: widget.student.guardianCpf,
     );
     await _repo.updateStudent(promoted);
     // Initialize checklist for new cap
@@ -90,6 +96,54 @@ class _StudentDetailPageState extends State<StudentDetailPage> {
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Aluno promovido para ${next.name}')));
       Navigator.of(context).pop();
+    }
+  }
+
+  void _goToEvaluation() {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => StudentEvaluationPage(student: widget.student),
+      ),
+    );
+  }
+
+  Future<void> _toggleActiveStatus() async {
+    final newStatus = !widget.student.active;
+    final action = newStatus ? 'reativar' : 'desativar';
+
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('${action[0].toUpperCase()}${action.substring(1)} aluno'),
+        content: Text('Tem certeza que deseja $action este aluno?'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancelar')),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: Text(action[0].toUpperCase() + action.substring(1)),
+          ),
+        ],
+      ),
+    );
+
+    if (ok == true) {
+      final updated = Student(
+        id: widget.student.id,
+        name: widget.student.name,
+        phone: widget.student.phone,
+        level: widget.student.level,
+        age: widget.student.age,
+        active: newStatus,
+        studentCpf: widget.student.studentCpf,
+        guardianCpf: widget.student.guardianCpf,
+      );
+      await _repo.updateStudent(updated);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Aluno ${newStatus ? "reativado" : "desativado"} com sucesso')),
+        );
+        Navigator.of(context).pop();
+      }
     }
   }
 
@@ -191,211 +245,247 @@ class _StudentDetailPageState extends State<StudentDetailPage> {
                     ],
                   ),
                   const SizedBox(height: 20),
-                  _InfoChip(icon: Icons.email, label: s.email),
-                  const SizedBox(height: 8),
                   _InfoChip(icon: Icons.phone, label: s.phone),
                   const SizedBox(height: 8),
                   _InfoChip(icon: Icons.cake, label: '${s.age} anos'),
+                  if (s.studentCpf != null && s.studentCpf!.isNotEmpty) ...[
+                    const SizedBox(height: 8),
+                    _InfoChip(icon: Icons.badge_outlined, label: 'CPF Aluno: ${s.studentCpf}'),
+                  ],
+                  const SizedBox(height: 8),
+                  _InfoChip(icon: Icons.supervisor_account_outlined, label: 'CPF Responsável: ${s.guardianCpf}'),
                 ],
               ),
             ),
 
-            // Botões de ação
-            if (canEdit)
+            // Verificar se é touca branca - mostrar mensagem especial
+            if (s.level == CapLevel.white)
               Padding(
                 padding: const EdgeInsets.all(16),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: ElevatedButton.icon(
-                        onPressed: _edit,
-                        icon: const Icon(Icons.edit),
-                        label: const Text('Editar'),
-                        style: ElevatedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: 12),
+                child: Card(
+                  color: Colors.amber.shade50,
+                  elevation: 4,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                    side: BorderSide(color: Colors.amber.shade300, width: 2),
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.all(24),
+                    child: Column(
+                      children: [
+                        Icon(
+                          Icons.emoji_events,
+                          size: 80,
+                          color: Colors.amber.shade700,
                         ),
-                      ),
-                    ),
-                    if (isAdmin) ...[
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: OutlinedButton.icon(
-                          onPressed: _confirmDelete,
-                          icon: const Icon(Icons.delete_outline),
-                          label: const Text('Remover'),
-                          style: OutlinedButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(vertical: 12),
-                            foregroundColor: Colors.red,
+                        const SizedBox(height: 16),
+                        Text(
+                          '🎉 PARABÉNS! 🎉',
+                          style: TextStyle(
+                            fontSize: 28,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.amber.shade900,
                           ),
+                          textAlign: TextAlign.center,
                         ),
-                      ),
-                    ],
-                  ],
+                        const SizedBox(height: 12),
+                        Text(
+                          'Você chegou no nível máximo!',
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.amber.shade800,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          'A touca BRANCA representa a excelência em natação. Continue praticando e inspire outros nadadores!',
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: Colors.grey.shade700,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
               ),
 
-            // Checklist area
+            // Botões de ação
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                children: [
+                  // Botão de Avaliação - sempre visível
+                  ElevatedButton.icon(
+                    onPressed: _goToEvaluation,
+                    icon: const Icon(Icons.assignment, size: 24),
+                    label: const Text(
+                      'Ver Avaliação',
+                      style: TextStyle(fontSize: 16),
+                    ),
+                    style: ElevatedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      minimumSize: const Size(double.infinity, 50),
+                      backgroundColor: AppColors.darkOrangeAccent,
+                      foregroundColor: Colors.white,
+                    ),
+                  ),
+
+                  if (canEdit) ...[
+                    const SizedBox(height: 12),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: ElevatedButton.icon(
+                            onPressed: _edit,
+                            icon: const Icon(Icons.edit),
+                            label: const Text('Editar'),
+                            style: ElevatedButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(vertical: 12),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        // Mostrar "Desativar" para alunos ativos, "Remover" apenas para inativos
+                        if (s.active)
+                          Expanded(
+                            child: OutlinedButton.icon(
+                              onPressed: _toggleActiveStatus,
+                              icon: const Icon(Icons.pause_circle_outline),
+                              label: const Text('Desativar'),
+                              style: OutlinedButton.styleFrom(
+                                padding: const EdgeInsets.symmetric(vertical: 12),
+                                foregroundColor: Colors.orange,
+                              ),
+                            ),
+                          )
+                        else if (widget.showInactiveActions && isAdmin)
+                          Expanded(
+                            child: OutlinedButton.icon(
+                              onPressed: _confirmDelete,
+                              icon: const Icon(Icons.delete_outline),
+                              label: const Text('Remover'),
+                              style: OutlinedButton.styleFrom(
+                                padding: const EdgeInsets.symmetric(vertical: 12),
+                                foregroundColor: Colors.red,
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
+                  ],
+
+                  // Botão de reativar para alunos inativos (na página de inativos)
+                  if (!s.active && widget.showInactiveActions && canEdit) ...[
+                    const SizedBox(height: 12),
+                    ElevatedButton.icon(
+                      onPressed: _toggleActiveStatus,
+                      icon: const Icon(Icons.restore, size: 24),
+                      label: const Text(
+                        'Reativar Aluno',
+                        style: TextStyle(fontSize: 16),
+                      ),
+                      style: ElevatedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        minimumSize: const Size(double.infinity, 50),
+                        backgroundColor: Colors.green,
+                        foregroundColor: Colors.white,
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+
+            // Card de progresso do checklist
             StreamBuilder<ChecklistTemplate?>(
               stream: _checklistRepo.streamTemplate(s.level),
               builder: (context, tplSnap) {
                 if (tplSnap.connectionState == ConnectionState.waiting) {
-                  return const Padding(
-                    padding: EdgeInsets.all(32),
-                    child: Center(child: CircularProgressIndicator()),
-                  );
+                  return const SizedBox.shrink();
                 }
                 final tpl = tplSnap.data;
-                if (tpl == null) {
-                  return Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: Card(
-                      color: AppColors.darkSurfaceVariant,
-                      child: Padding(
-                        padding: const EdgeInsets.all(20),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              children: [
-                                Icon(Icons.warning_rounded, color: AppColors.warning, size: 28),
-                                const SizedBox(width: 12),
-                                Expanded(
-                                  child: Text(
-                                    'Templates não encontrados',
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 18,
-                                      color: AppColors.warning,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 12),
-                            const Text(
-                              'Execute o seed dos templates:\n'
-                              '1. Abra o menu lateral (☰)\n'
-                              '2. Clique em "Popular Templates de Checklist"\n'
-                              '3. Clique em "Popular Templates"',
-                              style: TextStyle(fontSize: 14, color: AppColors.darkTextPrimary),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  );
-                }
+                if (tpl == null) return const SizedBox.shrink();
 
                 return StreamBuilder<StudentChecklist?>(
                   stream: _checklistRepo.streamStudentChecklist(s.id, s.level),
                   builder: (context, progSnap) {
                     if (progSnap.connectionState == ConnectionState.waiting) {
-                      return const Padding(
-                        padding: EdgeInsets.all(32),
-                        child: Center(child: CircularProgressIndicator()),
-                      );
+                      return const SizedBox.shrink();
                     }
                     final prog = progSnap.data;
-                    if (prog == null) {
-                      _checklistRepo.ensureStudentChecklistInitialized(s.id, s.level).catchError((_) {});
-                      return const Padding(
-                        padding: EdgeInsets.all(32),
-                        child: Center(
-                          child: CircularProgressIndicator(
-                            color: AppColors.darkOrangeAccent,
-                          ),
-                        ),
-                      );
-                    }
+                    if (prog == null) return const SizedBox.shrink();
 
-                    final progressMap = { for (var p in prog.items) p.itemId : p };
                     final completedCount = prog.items.where((i) => i.completed).length;
                     final totalCount = tpl.items.length;
                     final progress = totalCount > 0 ? completedCount / totalCount : 0.0;
 
-                    return Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        // Header do checklist com progresso
-                        Container(
-                          margin: const EdgeInsets.symmetric(horizontal: 16),
-                          padding: const EdgeInsets.all(16),
-                          decoration: BoxDecoration(
-                            color: Theme.of(context).colorScheme.primaryContainer,
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                tpl.title,
-                                style: TextStyle(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.bold,
-                                  color: Theme.of(context).colorScheme.onPrimaryContainer,
-                                ),
-                              ),
-                              const SizedBox(height: 12),
-                              Row(
+                    return Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      child: Column(
+                        children: [
+                          Card(
+                            color: AppColors.darkSurface,
+                            child: Padding(
+                              padding: const EdgeInsets.all(16),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Expanded(
-                                    child: ClipRRect(
-                                      borderRadius: BorderRadius.circular(8),
-                                      child: LinearProgressIndicator(
-                                        value: progress,
-                                        minHeight: 8,
-                                        backgroundColor: Colors.white.withOpacity(0.3),
-                                      ),
+                                  const Text(
+                                    'Progresso da Avaliação',
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                      color: AppColors.darkTextPrimary,
                                     ),
                                   ),
-                                  const SizedBox(width: 12),
+                                  const SizedBox(height: 12),
+                                  Row(
+                                    children: [
+                                      Expanded(
+                                        child: ClipRRect(
+                                          borderRadius: BorderRadius.circular(8),
+                                          child: LinearProgressIndicator(
+                                            value: progress,
+                                            minHeight: 10,
+                                            backgroundColor: AppColors.darkSurfaceVariant,
+                                            valueColor: AlwaysStoppedAnimation<Color>(
+                                              progress == 1.0 ? Colors.green.shade400 : AppColors.darkOrangeAccent,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                      const SizedBox(width: 12),
+                                      Text(
+                                        '$completedCount/$totalCount',
+                                        style: const TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 16,
+                                          color: AppColors.darkTextPrimary,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 4),
                                   Text(
-                                    '$completedCount/$totalCount',
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 16,
-                                      color: Theme.of(context).colorScheme.onPrimaryContainer,
+                                    '${(progress * 100).toStringAsFixed(0)}% completo',
+                                    style: const TextStyle(
+                                      fontSize: 12,
+                                      color: AppColors.darkTextSecondary,
                                     ),
                                   ),
                                 ],
                               ),
-                            ],
+                            ),
                           ),
-                        ),
-                        const SizedBox(height: 16),
 
-                        // Lista de itens do checklist em blocos
-                        ListView.builder(
-                          shrinkWrap: true,
-                          physics: const NeverScrollableScrollPhysics(),
-                          padding: const EdgeInsets.symmetric(horizontal: 16),
-                          itemCount: tpl.items.length,
-                          itemBuilder: (context, index) {
-                            final item = tpl.items[index];
-                            final ip = progressMap[item.id];
-                            final currentScore = ip?.score ?? 0;
-                            final completed = ip?.completed ?? false;
-
-                            return _ChecklistItemCard(
-                              item: item,
-                              score: currentScore,
-                              completed: completed,
-                              onScoreChanged: (score) => _updateItemProgress(s.level, item.id, score, completed),
-                              onCompletedChanged: (checked) {
-                                final newScore = (currentScore == 0 && checked) ? 1 : currentScore;
-                                _updateItemProgress(s.level, item.id, newScore, checked);
-                              },
-                            );
-                          },
-                        ),
-
-                        const SizedBox(height: 24),
-
-                        // Botão de próximo nível
-                        if (prog.allCompleted && canEdit)
-                          Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 16),
-                            child: ElevatedButton.icon(
+                          // Botão de próximo nível
+                          if (prog.allCompleted && canEdit) ...[
+                            const SizedBox(height: 12),
+                            ElevatedButton.icon(
                               onPressed: _promoteToNextCap,
                               icon: const Icon(Icons.arrow_upward, size: 24),
                               label: const Text(
@@ -404,14 +494,16 @@ class _StudentDetailPageState extends State<StudentDetailPage> {
                               ),
                               style: ElevatedButton.styleFrom(
                                 padding: const EdgeInsets.symmetric(vertical: 16),
+                                minimumSize: const Size(double.infinity, 50),
                                 backgroundColor: Colors.green,
                                 foregroundColor: Colors.white,
                               ),
                             ),
-                          ),
+                          ],
 
-                        const SizedBox(height: 24),
-                      ],
+                          const SizedBox(height: 24),
+                        ],
+                      ),
                     );
                   },
                 );
@@ -464,170 +556,6 @@ class _InfoChip extends StatelessWidget {
           ),
         ),
       ],
-    );
-  }
-}
-
-// Widget para cada item do checklist em formato de card
-class _ChecklistItemCard extends StatelessWidget {
-  final ChecklistItem item;
-  final int score;
-  final bool completed;
-  final Function(int) onScoreChanged;
-  final Function(bool) onCompletedChanged;
-
-  const _ChecklistItemCard({
-    required this.item,
-    required this.score,
-    required this.completed,
-    required this.onScoreChanged,
-    required this.onCompletedChanged,
-  });
-
-  Color _getScoreColor(int score) {
-    if (score == 0) return Colors.grey.shade300;
-    if (score <= 3) return Colors.red.shade400;
-    if (score <= 6) return Colors.orange.shade400;
-    if (score <= 8) return Colors.blue.shade400;
-    return Colors.green.shade400;
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      margin: const EdgeInsets.only(bottom: 12),
-      elevation: completed ? 2 : 1,
-      color: AppColors.darkSurface,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-        side: completed
-            ? BorderSide(color: Colors.green.shade400, width: 2)
-            : BorderSide(color: AppColors.darkDivider, width: 0.5),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Nome do item em destaque
-            Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    item.title,
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: completed ? Colors.green.shade400 : AppColors.darkTextPrimary,
-                      decoration: completed ? TextDecoration.lineThrough : null,
-                    ),
-                  ),
-                ),
-                if (completed)
-                  Icon(Icons.check_circle, color: Colors.green.shade400, size: 24),
-              ],
-            ),
-
-            if (item.description != null && item.description!.isNotEmpty) ...[
-              const SizedBox(height: 4),
-              Text(
-                item.description!,
-                style: const TextStyle(
-                  fontSize: 13,
-                  color: AppColors.darkTextSecondary,
-                ),
-              ),
-            ],
-
-            const SizedBox(height: 12),
-            Divider(height: 1, color: AppColors.darkDivider),
-            const SizedBox(height: 12),
-
-            // Nota e checkbox na parte inferior
-            Row(
-              children: [
-                // Nota com visual de chips
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        'Nota',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: AppColors.darkTextSecondary,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Wrap(
-                        spacing: 6,
-                        runSpacing: 6,
-                        children: List.generate(10, (i) {
-                          final val = i + 1;
-                          final isSelected = score == val;
-                          return InkWell(
-                            onTap: () => onScoreChanged(val),
-                            borderRadius: BorderRadius.circular(8),
-                            child: Container(
-                              width: 40,
-                              height: 40,
-                              decoration: BoxDecoration(
-                                color: isSelected ? _getScoreColor(val) : AppColors.darkSurfaceVariant,
-                                borderRadius: BorderRadius.circular(8),
-                                border: Border.all(
-                                  color: isSelected ? _getScoreColor(val) : AppColors.darkDivider,
-                                  width: isSelected ? 2 : 1,
-                                ),
-                              ),
-                              child: Center(
-                                child: Text(
-                                  '$val',
-                                  style: TextStyle(
-                                    fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                                    color: isSelected ? Colors.white : AppColors.darkTextPrimary,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          );
-                        }),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(width: 16),
-
-                // Checkbox de conclusão
-                Column(
-                  children: [
-                    Container(
-                      decoration: BoxDecoration(
-                        color: completed ? Colors.green.shade900.withOpacity(0.3) : AppColors.darkSurfaceVariant,
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Checkbox(
-                        value: completed,
-                        onChanged: (checked) => onCompletedChanged(checked ?? false),
-                        activeColor: Colors.green.shade600,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      'Concluído',
-                      style: TextStyle(
-                        fontSize: 11,
-                        color: completed ? Colors.green.shade400 : AppColors.darkTextSecondary,
-                        fontWeight: completed ? FontWeight.bold : FontWeight.normal,
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
     );
   }
 }
