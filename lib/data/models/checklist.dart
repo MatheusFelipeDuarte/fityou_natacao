@@ -5,12 +5,12 @@ import 'student.dart';
 /// Ordem de progressão das toucas conforme solicitado pelo usuário:
 /// Azul -> Amarela -> Laranja -> Vermelha -> Preta -> Branca
 const List<CapLevel> capProgressionOrder = [
-  CapLevel.blue,
-  CapLevel.yellow,
-  CapLevel.orange,
-  CapLevel.red,
-  CapLevel.black,
-  CapLevel.white,
+  CapLevel.azul,
+  CapLevel.amarela,
+  CapLevel.laranja,
+  CapLevel.vermelha,
+  CapLevel.preta,
+  CapLevel.branca,
 ];
 
 CapLevel? nextCapLevel(CapLevel current) {
@@ -77,7 +77,7 @@ class ChecklistTemplate {
     final data = doc.data() ?? {};
     final rawItems = (data['items'] as List<dynamic>?) ?? [];
     return ChecklistTemplate(
-      cap: CapLevel.values.firstWhere((e) => e.name == (data['cap'] as String? ?? doc.id), orElse: () => CapLevel.blue),
+      cap: CapLevel.values.firstWhere((e) => e.name == (data['cap'] as String? ?? doc.id), orElse: () => CapLevel.azul),
       id: doc.id,
       title: data['title'] as String? ?? '',
       items: rawItems.map((e) => ChecklistItem.fromMap(Map<String, dynamic>.from(e as Map))).toList(),
@@ -144,7 +144,7 @@ class StudentChecklist {
     final capName = data['cap'] as String? ?? '';
     return StudentChecklist(
       studentId: data['studentId'] as String? ?? doc.id,
-      cap: CapLevel.values.firstWhere((e) => e.name == capName, orElse: () => CapLevel.blue),
+      cap: CapLevel.values.firstWhere((e) => e.name == capName, orElse: () => CapLevel.azul),
       items: rawItems.map((e) => StudentChecklistItemProgress.fromMap(Map<String, dynamic>.from(e as Map))).toList(),
       updatedAt: data['updatedAt'] as Timestamp?,
     );

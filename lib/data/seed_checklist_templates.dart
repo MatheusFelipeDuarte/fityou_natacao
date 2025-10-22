@@ -26,8 +26,8 @@ class ChecklistTemplateSeeder {
   // Azul -> Amarela
   Future<void> _seedBlueToYellow() async {
     final template = ChecklistTemplate(
-      cap: CapLevel.blue,
-      id: 'blue',
+      cap: CapLevel.azul,
+      id: 'azul',
       title: 'Touca Azul → Amarela',
       items: [
         ChecklistItem(id: 'respiracao_boca_nariz', title: 'Respiração (boca/Nariz)', order: 1),
@@ -51,8 +51,8 @@ class ChecklistTemplateSeeder {
   // Amarela -> Laranja
   Future<void> _seedYellowToOrange() async {
     final template = ChecklistTemplate(
-      cap: CapLevel.yellow,
-      id: 'yellow',
+      cap: CapLevel.amarela,
+      id: 'amarela',
       title: 'Touca Amarela → Laranja',
       items: [
         ChecklistItem(id: 'streamline', title: 'Streamline (foguete desligado)', order: 1),
@@ -76,8 +76,8 @@ class ChecklistTemplateSeeder {
   // Laranja -> Vermelha
   Future<void> _seedOrangeToRed() async {
     final template = ChecklistTemplate(
-      cap: CapLevel.orange,
-      id: 'orange',
+      cap: CapLevel.laranja,
+      id: 'laranja',
       title: 'Touca Laranja → Vermelha',
       items: [
         ChecklistItem(id: 'crawl_aperfeicoamento', title: 'Crawl (aperfeiçoamento)', order: 1),
@@ -102,8 +102,8 @@ class ChecklistTemplateSeeder {
   // Vermelha -> Preta
   Future<void> _seedRedToBlack() async {
     final template = ChecklistTemplate(
-      cap: CapLevel.red,
-      id: 'red',
+      cap: CapLevel.vermelha,
+      id: 'vermelha',
       title: 'Touca Vermelha → Preta',
       items: [
         ChecklistItem(id: 'crawl_aperfeicoamento', title: 'Crawl (aperfeiçoamento)', order: 1),
@@ -128,8 +128,8 @@ class ChecklistTemplateSeeder {
   // Preta -> Branca
   Future<void> _seedBlackToWhite() async {
     final template = ChecklistTemplate(
-      cap: CapLevel.black,
-      id: 'black',
+      cap: CapLevel.preta,
+      id: 'preta',
       title: 'Touca Preta → Branca',
       items: [
         ChecklistItem(id: 'crawl', title: 'Crawl', order: 1),

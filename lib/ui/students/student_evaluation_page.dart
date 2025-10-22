@@ -178,7 +178,7 @@ class _StudentEvaluationPageState extends State<StudentEvaluationPage> {
                                   child: Text(
                                     'Touca Atual: ${s.level.name.toUpperCase()}',
                                     style: TextStyle(
-                                      color: s.level == CapLevel.white || s.level == CapLevel.yellow
+                                      color: s.level == CapLevel.branca || s.level == CapLevel.amarela
                                           ? Colors.black87
                                           : Colors.white,
                                       fontWeight: FontWeight.bold,
@@ -234,7 +234,7 @@ class _StudentEvaluationPageState extends State<StudentEvaluationPage> {
                                           checklist.cap.name.toUpperCase(),
                                           style: TextStyle(
                                             color: isSelected
-                                                ? (checklist.cap == CapLevel.white || checklist.cap == CapLevel.yellow ? Colors.black87 : Colors.white)
+                                                ? (checklist.cap == CapLevel.branca || checklist.cap == CapLevel.amarela ? Colors.black87 : Colors.white)
                                                 : Colors.white,
                                             fontWeight: FontWeight.bold,
                                             fontSize: 12,
@@ -262,7 +262,7 @@ class _StudentEvaluationPageState extends State<StudentEvaluationPage> {
                   stream: _checklistRepo.streamTemplate(_selectedCap),
                   builder: (context, tplSnap) {
                     // Se for touca branca, mostrar mensagem especial ao invés do checklist
-                    if (_selectedCap == CapLevel.white) {
+                    if (_selectedCap == CapLevel.branca) {
                       return Padding(
                         padding: const EdgeInsets.all(16),
                         child: Card(
@@ -549,17 +549,17 @@ class _StudentEvaluationPageState extends State<StudentEvaluationPage> {
 
   Color _capColorForLevel(CapLevel level) {
     switch (level) {
-      case CapLevel.blue:
+      case CapLevel.azul:
         return Colors.blue.shade600;
-      case CapLevel.yellow:
+      case CapLevel.amarela:
         return Colors.yellow.shade600;
-      case CapLevel.orange:
+      case CapLevel.laranja:
         return Colors.orange.shade600;
-      case CapLevel.red:
+      case CapLevel.vermelha:
         return Colors.red.shade600;
-      case CapLevel.black:
+      case CapLevel.preta:
         return Colors.black87;
-      case CapLevel.white:
+      case CapLevel.branca:
         return Colors.grey.shade200;
     }
   }

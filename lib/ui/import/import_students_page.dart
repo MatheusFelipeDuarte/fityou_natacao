@@ -300,22 +300,22 @@ Pedro Oliveira,8,(31) 99999-8888,blue,55544433322,66677788899''';
 
   CapLevel? _parseLevel(String level) {
     final levelMap = {
-      'azul': CapLevel.blue,
-      'blue': CapLevel.blue,
-      'amarela': CapLevel.yellow,
-      'amarelo': CapLevel.yellow,
-      'yellow': CapLevel.yellow,
-      'laranja': CapLevel.orange,
-      'orange': CapLevel.orange,
-      'vermelha': CapLevel.red,
-      'vermelho': CapLevel.red,
-      'red': CapLevel.red,
-      'preta': CapLevel.black,
-      'preto': CapLevel.black,
-      'black': CapLevel.black,
-      'branca': CapLevel.white,
-      'branco': CapLevel.white,
-      'white': CapLevel.white,
+      'azul': CapLevel.azul,
+      'blue': CapLevel.azul,
+      'amarela': CapLevel.amarela,
+      'amarelo': CapLevel.amarela,
+      'yellow': CapLevel.amarela,
+      'laranja': CapLevel.laranja,
+      'orange': CapLevel.laranja,
+      'vermelha': CapLevel.vermelha,
+      'vermelho': CapLevel.vermelha,
+      'red': CapLevel.vermelha,
+      'preta': CapLevel.preta,
+      'preto': CapLevel.preta,
+      'black': CapLevel.preta,
+      'branca': CapLevel.branca,
+      'branco': CapLevel.branca,
+      'white': CapLevel.branca,
     };
 
     return levelMap[level.toLowerCase()];

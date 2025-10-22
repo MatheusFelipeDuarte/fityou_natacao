@@ -21,7 +21,7 @@ class _StudentFormPageState extends State<StudentFormPage> {
   final _ageController = TextEditingController();
   final _studentCpfController = TextEditingController();
   final _guardianCpfController = TextEditingController();
-  CapLevel _level = CapLevel.blue;
+  CapLevel _level = CapLevel.azul;
   bool _active = true;
   bool _busy = false;
   final _repo = StudentRepository();
@@ -311,7 +311,7 @@ class _StudentFormPageState extends State<StudentFormPage> {
                                 ),
                               ))
                           .toList(),
-                      onChanged: (v) => setState(() => _level = v ?? CapLevel.blue),
+                      onChanged: (v) => setState(() => _level = v ?? CapLevel.azul),
                     ),
                     const SizedBox(height: 20),
                     Container(
@@ -392,17 +392,17 @@ class _StudentFormPageState extends State<StudentFormPage> {
 
   Color _getCapColor(CapLevel level) {
     switch (level) {
-      case CapLevel.blue:
+      case CapLevel.azul:
         return Colors.blue.shade600;
-      case CapLevel.yellow:
+      case CapLevel.amarela:
         return Colors.yellow.shade600;
-      case CapLevel.orange:
+      case CapLevel.laranja:
         return Colors.orange.shade600;
-      case CapLevel.red:
+      case CapLevel.vermelha:
         return Colors.red.shade600;
-      case CapLevel.black:
+      case CapLevel.preta:
         return Colors.black87;
-      case CapLevel.white:
+      case CapLevel.branca:
         return Colors.grey.shade200;
     }
   }

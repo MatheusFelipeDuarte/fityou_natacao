@@ -1,12 +1,32 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 enum CapLevel {
-  blue,   // iniciante - Touca Azul
-  yellow,
-  orange,
-  red,
-  black, // avançado
-  white, // mais avançado - Touca Branca
+  azul,      // iniciante - Touca Azul
+  amarela,   // Touca Amarela
+  laranja,   // Touca Laranja
+  vermelha,  // Touca Vermelha
+  preta,     // avançado - Touca Preta
+  branca,    // mais avançado - Touca Branca
+}
+
+// Extensão para obter o nome em português
+extension CapLevelExtension on CapLevel {
+  String get displayName {
+    switch (this) {
+      case CapLevel.azul:
+        return 'Azul';
+      case CapLevel.amarela:
+        return 'Amarela';
+      case CapLevel.laranja:
+        return 'Laranja';
+      case CapLevel.vermelha:
+        return 'Vermelha';
+      case CapLevel.preta:
+        return 'Preta';
+      case CapLevel.branca:
+        return 'Branca';
+    }
+  }
 }
 
 class Student {
@@ -51,7 +71,7 @@ class Student {
       phone: data['phone'] ?? '',
       level: CapLevel.values.firstWhere(
         (e) => e.name == data['level'],
-        orElse: () => CapLevel.blue,
+        orElse: () => CapLevel.azul,
       ),
       age: (data['age'] ?? 0) as int,
       active: (data['active'] ?? true) as bool,

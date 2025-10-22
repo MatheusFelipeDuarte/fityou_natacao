@@ -213,9 +213,9 @@ class _StudentDetailPageState extends State<StudentDetailPage> {
                                 borderRadius: BorderRadius.circular(12),
                               ),
                               child: Text(
-                                'Touca ${s.level.name.toUpperCase()}',
+                                'Touca ${s.level.displayName}',
                                 style: TextStyle(
-                                  color: s.level == CapLevel.white || s.level == CapLevel.yellow
+                                  color: s.level == CapLevel.branca || s.level == CapLevel.amarela
                                       ? Colors.black87
                                       : Colors.white,
                                   fontWeight: FontWeight.bold,
@@ -259,7 +259,7 @@ class _StudentDetailPageState extends State<StudentDetailPage> {
             ),
 
             // Verificar se é touca branca - mostrar mensagem especial
-            if (s.level == CapLevel.white)
+            if (s.level == CapLevel.branca)
               Padding(
                 padding: const EdgeInsets.all(16),
                 child: Card(
@@ -517,17 +517,17 @@ class _StudentDetailPageState extends State<StudentDetailPage> {
 
   Color _capColorForLevel(CapLevel level) {
     switch (level) {
-      case CapLevel.blue:
+      case CapLevel.azul:
         return Colors.blue.shade600;
-      case CapLevel.yellow:
+      case CapLevel.amarela:
         return Colors.yellow.shade600;
-      case CapLevel.orange:
+      case CapLevel.laranja:
         return Colors.orange.shade600;
-      case CapLevel.red:
+      case CapLevel.vermelha:
         return Colors.red.shade600;
-      case CapLevel.black:
+      case CapLevel.preta:
         return Colors.black87;
-      case CapLevel.white:
+      case CapLevel.branca:
         return Colors.grey.shade200;
     }
   }

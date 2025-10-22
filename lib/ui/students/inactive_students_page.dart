@@ -209,17 +209,17 @@ class _InactiveStudentCard extends StatelessWidget {
 
   Color _capColor(CapLevel level, BuildContext context) {
     switch (level) {
-      case CapLevel.blue:
+      case CapLevel.azul:
         return Colors.blue.shade600;
-      case CapLevel.yellow:
+      case CapLevel.amarela:
         return Colors.yellow.shade600;
-      case CapLevel.orange:
+      case CapLevel.laranja:
         return Colors.orange.shade600;
-      case CapLevel.red:
+      case CapLevel.vermelha:
         return Colors.red.shade600;
-      case CapLevel.black:
+      case CapLevel.preta:
         return Colors.black87;
-      case CapLevel.white:
+      case CapLevel.branca:
         return Colors.grey.shade200;
     }
   }
@@ -269,7 +269,7 @@ class _InactiveStudentCard extends StatelessWidget {
                         child: Text(
                           student.name.isNotEmpty ? student.name[0].toUpperCase() : '?',
                           style: TextStyle(
-                            color: student.level == CapLevel.white || student.level == CapLevel.yellow
+                            color: student.level == CapLevel.branca || student.level == CapLevel.amarela
                                 ? Colors.black87
                                 : Colors.white,
                             fontWeight: FontWeight.bold,
