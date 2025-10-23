@@ -363,11 +363,11 @@ class _StudentEvaluationPageState extends State<StudentEvaluationPage> {
                               children: [
                                 Row(
                                   children: [
-                                    Icon(Icons.warning_rounded, color: AppColors.warning, size: 28),
+                                    Icon(Icons.info_outline, color: AppColors.warning, size: 28),
                                     const SizedBox(width: 12),
                                     Expanded(
                                       child: Text(
-                                        'Templates não encontrados',
+                                        canEdit ? 'Templates não encontrados' : 'Avaliação não disponível',
                                         style: TextStyle(
                                           fontWeight: FontWeight.bold,
                                           fontSize: 18,
@@ -378,9 +378,11 @@ class _StudentEvaluationPageState extends State<StudentEvaluationPage> {
                                   ],
                                 ),
                                 const SizedBox(height: 12),
-                                const Text(
-                                  'Execute o seed dos templates no menu lateral.',
-                                  style: TextStyle(fontSize: 14, color: AppColors.darkTextPrimary),
+                                Text(
+                                  canEdit
+                                    ? 'Execute o seed dos templates no menu lateral.'
+                                    : 'Os templates de avaliação ainda não foram configurados. Entre em contato com o administrador.',
+                                  style: const TextStyle(fontSize: 14, color: AppColors.darkTextPrimary),
                                 ),
                               ],
                             ),
@@ -661,9 +663,8 @@ class _ChecklistItemCard extends StatelessWidget {
                         children: List.generate(10, (i) {
                           final val = i + 1;
                           final isSelected = score == val;
-                          return InkWell(
+                          return GestureDetector(
                             onTap: canEdit ? () => onScoreChanged(val) : null,
-                            borderRadius: BorderRadius.circular(8),
                             child: Container(
                               width: 40,
                               height: 40,

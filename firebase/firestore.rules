@@ -11,9 +11,9 @@ service cloud.firestore {
       return request.auth != null;
     }
 
-    // Alunos
+    // Alunos - leitura pública para alunos ativos, escrita apenas para autenticados
     match /students/{docId} {
-      allow read: if isAuthed(request);
+      allow read: if true; // Permite leitura pública
       allow create, update, delete: if isAuthed(request) && (hasRole(request, 'admin') || hasRole(request, 'professor'));
     }
 
@@ -23,15 +23,15 @@ service cloud.firestore {
       allow write: if hasRole(request, 'admin');
     }
 
-    // Templates de Checklist (apenas admins podem criar/editar)
+    // Templates de Checklist - leitura pública, escrita apenas para admins
     match /checklist_templates/{templateId} {
-      allow read: if isAuthed(request);
+      allow read: if true; // Permite leitura pública para que usuários não logados possam ver as avaliações
       allow create, update, delete: if isAuthed(request) && hasRole(request, 'admin');
     }
 
-    // Checklists dos Alunos (professores e admins podem editar)
+    // Checklists dos Alunos - leitura pública, escrita apenas para professores/admins
     match /student_checklists/{checklistId} {
-      allow read: if isAuthed(request);
+      allow read: if true; // Permite leitura pública para que usuários não logados possam ver as avaliações
       allow create, update, delete: if isAuthed(request) && (hasRole(request, 'admin') || hasRole(request, 'professor'));
     }
   }

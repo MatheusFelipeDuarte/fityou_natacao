@@ -3,8 +3,8 @@ import 'theme/app_theme.dart';
 // import 'ui/home_page.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
-import 'ui/login/login_page.dart';
 import 'ui/students/students_page.dart';
+import 'ui/students/student_search_page.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 Future<void> main() async {
@@ -42,7 +42,7 @@ class AuthGate extends StatelessWidget {
         }
         final user = snapshot.data;
         if (user == null) {
-          return const LoginPage();
+          return const StudentSearchPage();
         }
         return const StudentsPage();
       },
