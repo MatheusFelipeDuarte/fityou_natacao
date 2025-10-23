@@ -30,10 +30,13 @@ class _StudentSearchPageState extends State<StudentSearchPage> {
     // Remove tudo que não é número
     final numbers = cpf.replaceAll(RegExp(r'[^\d]'), '');
 
-    if (numbers.length <= 3) return numbers;
-    if (numbers.length <= 6) return '${numbers.substring(0, 3)}.${numbers.substring(3)}';
-    if (numbers.length <= 9) return '${numbers.substring(0, 3)}.${numbers.substring(3, 6)}.${numbers.substring(6)}';
-    return '${numbers.substring(0, 3)}.${numbers.substring(3, 6)}.${numbers.substring(6, 9)}-${numbers.substring(9, 11)}';
+    // Limita a 11 dígitos
+    final limitedNumbers = numbers.length > 11 ? numbers.substring(0, 11) : numbers;
+
+    if (limitedNumbers.length <= 3) return limitedNumbers;
+    if (limitedNumbers.length <= 6) return '${limitedNumbers.substring(0, 3)}.${limitedNumbers.substring(3)}';
+    if (limitedNumbers.length <= 9) return '${limitedNumbers.substring(0, 3)}.${limitedNumbers.substring(3, 6)}.${limitedNumbers.substring(6)}';
+    return '${limitedNumbers.substring(0, 3)}.${limitedNumbers.substring(3, 6)}.${limitedNumbers.substring(6, 9)}-${limitedNumbers.substring(9)}';
   }
 
   void _searchByCpf() async {
@@ -118,145 +121,150 @@ class _StudentSearchPageState extends State<StudentSearchPage> {
           const SizedBox(width: 8),
         ],
       ),
-      body: Column(
-        children: [
-          // Header com gradiente
-          Container(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  Theme.of(context).colorScheme.primary,
-                  Theme.of(context).colorScheme.primary.withValues(alpha: 0.7),
-                ],
-              ),
-            ),
-            padding: const EdgeInsets.all(24),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                const Icon(
-                  Icons.pool,
-                  size: 64,
-                  color: Colors.white,
-                ),
-                const SizedBox(height: 16),
-                const Text(
-                  'Buscar Aluno',
-                  style: TextStyle(
-                    fontSize: 28,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 8),
-                const Text(
-                  'Pesquise pelo CPF do aluno ou responsável',
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Colors.white70,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-              ],
-            ),
-          ),
-
-          // Campo de busca
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: Card(
-              elevation: 4,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
-              ),
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    TextField(
-                      controller: _cpfController,
-                      decoration: InputDecoration(
-                        labelText: 'CPF',
-                        hintText: '000.000.000-00',
-                        prefixIcon: const Icon(Icons.search),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        suffixIcon: _cpfController.text.isNotEmpty
-                            ? IconButton(
-                                icon: const Icon(Icons.clear),
-                                onPressed: () {
-                                  _cpfController.clear();
-                                  setState(() {
-                                    _searchResults = [];
-                                    _hasSearched = false;
-                                  });
-                                },
-                              )
-                            : null,
-                      ),
-                      keyboardType: TextInputType.number,
-                      inputFormatters: [
-                        FilteringTextInputFormatter.digitsOnly,
-                        LengthLimitingTextInputFormatter(11),
-                      ],
-                      onChanged: (value) {
-                        setState(() {
-                          _cpfController.text = _formatCpf(value);
-                          _cpfController.selection = TextSelection.fromPosition(
-                            TextPosition(offset: _cpfController.text.length),
-                          );
-                        });
-                      },
-                      onSubmitted: (_) => _searchByCpf(),
-                    ),
-                    const SizedBox(height: 16),
-                    ElevatedButton.icon(
-                      onPressed: _isSearching ? null : _searchByCpf,
-                      icon: _isSearching
-                          ? const SizedBox(
-                              width: 20,
-                              height: 20,
-                              child: CircularProgressIndicator(strokeWidth: 2),
-                            )
-                          : const Icon(Icons.search),
-                      label: Text(_isSearching ? 'Buscando...' : 'Buscar'),
-                      style: ElevatedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
-                    ),
+      body: SingleChildScrollView(
+        child: Column(
+          children: [
+            // Header com gradiente
+            Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    Theme.of(context).colorScheme.primary,
+                    Theme.of(context).colorScheme.primary.withValues(alpha: 0.7),
                   ],
                 ),
               ),
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  const Icon(
+                    Icons.pool,
+                    size: 64,
+                    color: Colors.white,
+                  ),
+                  const SizedBox(height: 16),
+                  const Text(
+                    'Buscar Aluno',
+                    style: TextStyle(
+                      fontSize: 28,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 8),
+                  const Text(
+                    'Pesquise pelo CPF do aluno ou responsável',
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Colors.white70,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ],
+              ),
             ),
-          ),
 
-          // Resultados
-          Expanded(
-            child: _buildResults(),
-          ),
-        ],
+            // Campo de busca
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Card(
+                elevation: 4,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      TextField(
+                        controller: _cpfController,
+                        decoration: InputDecoration(
+                          labelText: 'CPF',
+                          hintText: '000.000.000-00',
+                          prefixIcon: const Icon(Icons.search),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          suffixIcon: _cpfController.text.isNotEmpty
+                              ? IconButton(
+                                  icon: const Icon(Icons.clear),
+                                  onPressed: () {
+                                    _cpfController.clear();
+                                    setState(() {
+                                      _searchResults = [];
+                                      _hasSearched = false;
+                                    });
+                                  },
+                                )
+                              : null,
+                        ),
+                        keyboardType: TextInputType.number,
+                        inputFormatters: [
+                          FilteringTextInputFormatter.digitsOnly,
+                          LengthLimitingTextInputFormatter(11),
+                        ],
+                        onChanged: (value) {
+                          setState(() {
+                            _cpfController.text = _formatCpf(value);
+                            _cpfController.selection = TextSelection.fromPosition(
+                              TextPosition(offset: _cpfController.text.length),
+                            );
+                          });
+                        },
+                        onSubmitted: (_) => _searchByCpf(),
+                      ),
+                      const SizedBox(height: 16),
+                      ElevatedButton.icon(
+                        onPressed: _isSearching ? null : _searchByCpf,
+                        icon: _isSearching
+                            ? const SizedBox(
+                                width: 20,
+                                height: 20,
+                                child: CircularProgressIndicator(strokeWidth: 2),
+                              )
+                            : const Icon(Icons.search),
+                        label: Text(_isSearching ? 'Buscando...' : 'Buscar'),
+                        style: ElevatedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+
+            // Resultados
+            _buildResults(),
+          ],
+        ),
       ),
     );
   }
 
   Widget _buildResults() {
     if (_isSearching) {
-      return const Center(
-        child: CircularProgressIndicator(),
+      return const Padding(
+        padding: EdgeInsets.all(32.0),
+        child: Center(
+          child: CircularProgressIndicator(),
+        ),
       );
     }
 
     if (!_hasSearched) {
-      return Center(
+      return Padding(
+        padding: const EdgeInsets.all(32.0),
         child: Column(
+          mainAxisSize: MainAxisSize.min,
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(
@@ -278,43 +286,44 @@ class _StudentSearchPageState extends State<StudentSearchPage> {
     }
 
     if (_searchResults.isEmpty) {
-      return Center(
-        child: Padding(
-          padding: const EdgeInsets.all(32),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(
-                Icons.sentiment_dissatisfied,
-                size: 100,
-                color: Colors.orange.shade400,
+      return Padding(
+        padding: const EdgeInsets.all(32),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.sentiment_dissatisfied,
+              size: 100,
+              color: Colors.orange.shade400,
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'Nenhum aluno encontrado',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: Colors.grey.shade700,
               ),
-              const SizedBox(height: 16),
-              Text(
-                'Nenhum aluno encontrado',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.grey.shade700,
-                ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Verifique se o CPF está correto',
+              style: TextStyle(
+                fontSize: 14,
+                color: Colors.grey.shade600,
               ),
-              const SizedBox(height: 8),
-              Text(
-                'Verifique se o CPF está correto',
-                style: TextStyle(
-                  fontSize: 14,
-                  color: Colors.grey.shade600,
-                ),
-                textAlign: TextAlign.center,
-              ),
-            ],
-          ),
+              textAlign: TextAlign.center,
+            ),
+          ],
         ),
       );
     }
 
     return ListView.builder(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       itemCount: _searchResults.length,
       itemBuilder: (context, index) {
         final student = _searchResults[index];

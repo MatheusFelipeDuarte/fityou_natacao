@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../../services/role_service.dart';
 import '../students/students_page.dart';
+import '../students/student_search_page.dart';
 import '../students/inactive_students_page.dart';
 import '../users/manage_users_list_page.dart';
 import '../profile/profile_page.dart';
@@ -196,7 +197,13 @@ class _AppDrawerState extends State<AppDrawer> {
             isDestructive: true,
             onTap: () async {
               await FirebaseAuth.instance.signOut();
-              if (context.mounted) Navigator.of(context).pop();
+              if (context.mounted) {
+                // Remove todas as rotas e volta para a página inicial (StudentSearchPage)
+                Navigator.of(context).pushAndRemoveUntil(
+                  MaterialPageRoute(builder: (_) => const StudentSearchPage()),
+                  (route) => false,
+                );
+              }
             },
           ),
           const SizedBox(height: 8),
