@@ -5,6 +5,7 @@ import '../../data/repositories/student_repository.dart';
 import '../../data/repositories/checklist_repository.dart';
 import '../../theme/app_colors.dart';
 import '../students/student_evaluation_page.dart';
+import '../widgets/app_background.dart';
 
 class AllEvaluationsPage extends StatefulWidget {
   const AllEvaluationsPage({super.key});
@@ -31,158 +32,187 @@ class _AllEvaluationsPageState extends State<AllEvaluationsPage> {
       appBar: AppBar(
         title: const Text('Avaliações'),
         elevation: 0,
+        backgroundColor: Colors.transparent,
       ),
-      body: Column(
-        children: [
-          // Campo de pesquisa
-          Container(
-            padding: const EdgeInsets.all(16),
-            color: AppColors.darkSurface,
-            child: Container(
-              decoration: BoxDecoration(
-                color: AppColors.darkBackground,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(
-                  color: AppColors.darkDivider,
-                  width: 1,
+      extendBodyBehindAppBar: true,
+      backgroundColor: Colors.transparent,
+      body: AppBackground(
+        child: Column(
+          children: [
+            // Campo de pesquisa
+            Container(
+              padding: const EdgeInsets.fromLTRB(
+                16,
+                100,
+                16,
+                16,
+              ), // Padding top para compensar AppBar transparente
+              child: Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: AppColors.lightDivider, width: 1),
                 ),
-              ),
-              child: TextField(
-                controller: _searchController,
-                style: const TextStyle(color: AppColors.darkTextPrimary),
-                decoration: InputDecoration(
-                  labelText: 'Pesquisar aluno',
-                  labelStyle: const TextStyle(color: AppColors.darkTextSecondary),
-                  hintText: 'Digite o nome do aluno...',
-                  hintStyle: TextStyle(color: AppColors.darkTextSecondary.withOpacity(0.6)),
-                  prefixIcon: const Icon(Icons.search, size: 22, color: AppColors.darkTextSecondary),
-                  suffixIcon: _searchController.text.isNotEmpty
-                      ? IconButton(
-                          icon: const Icon(Icons.clear, color: AppColors.darkTextSecondary),
-                          onPressed: () {
-                            _searchController.clear();
-                            setState(() {});
-                          },
-                        )
-                      : null,
-                  border: InputBorder.none,
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                ),
-                onChanged: (_) => setState(() {}),
-              ),
-            ),
-          ),
-
-          // Filtro por touca
-          Container(
-            padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-            color: AppColors.darkSurface,
-            child: Row(
-              children: [
-                const Icon(Icons.filter_list, color: AppColors.darkTextSecondary, size: 20),
-                const SizedBox(width: 12),
-                const Text(
-                  'Touca:',
-                  style: TextStyle(
-                    color: AppColors.darkTextPrimary,
-                    fontSize: 14,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: SingleChildScrollView(
-                    scrollDirection: Axis.horizontal,
-                    child: Row(
-                      children: [
-                        _CapFilterChip(
-                          label: 'Todas',
-                          isSelected: _selectedCap == null,
-                          color: Colors.grey,
-                          onTap: () => setState(() => _selectedCap = null),
-                        ),
-                        ...CapLevel.values.map((cap) {
-                          return _CapFilterChip(
-                            label: cap.name.toUpperCase(),
-                            isSelected: _selectedCap == cap,
-                            color: _capColorForLevel(cap),
-                            onTap: () => setState(() => _selectedCap = cap),
-                          );
-                        }),
-                      ],
+                child: TextField(
+                  controller: _searchController,
+                  style: const TextStyle(color: AppColors.lightTextPrimary),
+                  decoration: InputDecoration(
+                    labelText: 'Pesquisar aluno',
+                    labelStyle: const TextStyle(
+                      color: AppColors.lightTextSecondary,
+                    ),
+                    hintText: 'Digite o nome do aluno...',
+                    hintStyle: TextStyle(
+                      color: AppColors.lightTextSecondary.withOpacity(0.6),
+                    ),
+                    prefixIcon: const Icon(
+                      Icons.search,
+                      size: 22,
+                      color: AppColors.lightTextSecondary,
+                    ),
+                    suffixIcon: _searchController.text.isNotEmpty
+                        ? IconButton(
+                            icon: const Icon(
+                              Icons.clear,
+                              color: AppColors.lightTextSecondary,
+                            ),
+                            onPressed: () {
+                              _searchController.clear();
+                              setState(() {});
+                            },
+                          )
+                        : null,
+                    border: InputBorder.none,
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 14,
                     ),
                   ),
+                  onChanged: (_) => setState(() {}),
                 ),
-              ],
+              ),
             ),
-          ),
 
-          // Lista de alunos com seus checklists
-          Expanded(
-            child: StreamBuilder<List<Student>>(
-              stream: _studentRepo.streamStudents(),
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const Center(
-                    child: CircularProgressIndicator(
-                      color: AppColors.darkOrangeAccent,
+            // Filtro por touca
+            Container(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+              child: Row(
+                children: [
+                  const Icon(
+                    Icons.filter_list,
+                    color: AppColors.lightTextSecondary,
+                    size: 20,
+                  ),
+                  const SizedBox(width: 12),
+                  const Text(
+                    'Touca:',
+                    style: TextStyle(
+                      color: AppColors.lightTextPrimary,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
                     ),
-                  );
-                }
-                if (snapshot.hasError) {
-                  return Center(child: Text('Erro: ${snapshot.error}'));
-                }
-
-                var students = snapshot.data ?? [];
-
-                // Aplicar filtro de pesquisa por nome
-                final searchQuery = _searchController.text.toLowerCase().trim();
-                if (searchQuery.isNotEmpty) {
-                  students = students.where((s) => s.name.toLowerCase().contains(searchQuery)).toList();
-                }
-
-                if (students.isEmpty) {
-                  return Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          Icons.assignment_outlined,
-                          size: 80,
-                          color: AppColors.darkTextSecondary,
-                        ),
-                        const SizedBox(height: 16),
-                        Text(
-                          searchQuery.isNotEmpty
-                              ? 'Nenhum aluno encontrado para "$searchQuery"'
-                              : 'Nenhum aluno cadastrado',
-                          style: const TextStyle(
-                            fontSize: 18,
-                            color: AppColors.darkTextSecondary,
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      child: Row(
+                        children: [
+                          _CapFilterChip(
+                            label: 'Todas',
+                            isSelected: _selectedCap == null,
+                            color: Colors.grey,
+                            onTap: () => setState(() => _selectedCap = null),
                           ),
-                          textAlign: TextAlign.center,
-                        ),
-                      ],
+                          ...CapLevel.values.map((cap) {
+                            return _CapFilterChip(
+                              label: cap.name.toUpperCase(),
+                              isSelected: _selectedCap == cap,
+                              color: _capColorForLevel(cap),
+                              onTap: () => setState(() => _selectedCap = cap),
+                            );
+                          }),
+                        ],
+                      ),
                     ),
-                  );
-                }
-
-                return ListView.builder(
-                  padding: const EdgeInsets.all(16),
-                  itemCount: students.length,
-                  itemBuilder: (context, index) {
-                    final student = students[index];
-                    return _StudentAllEvaluationsCard(
-                      student: student,
-                      checklistRepo: _checklistRepo,
-                      selectedCapFilter: _selectedCap,
-                    );
-                  },
-                );
-              },
+                  ),
+                ],
+              ),
             ),
-          ),
-        ],
+
+            // Lista de alunos com seus checklists
+            Expanded(
+              child: StreamBuilder<List<Student>>(
+                stream: _studentRepo.streamStudents(),
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return const Center(
+                      child: CircularProgressIndicator(
+                        color: AppColors.primary,
+                      ),
+                    );
+                  }
+                  if (snapshot.hasError) {
+                    return Center(child: Text('Erro: ${snapshot.error}'));
+                  }
+
+                  var students = snapshot.data ?? [];
+
+                  // Aplicar filtro de pesquisa por nome
+                  final searchQuery = _searchController.text
+                      .toLowerCase()
+                      .trim();
+                  if (searchQuery.isNotEmpty) {
+                    students = students
+                        .where(
+                          (s) => s.name.toLowerCase().contains(searchQuery),
+                        )
+                        .toList();
+                  }
+
+                  if (students.isEmpty) {
+                    return Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.assignment_outlined,
+                            size: 80,
+                            color: AppColors.lightTextSecondary,
+                          ),
+                          const SizedBox(height: 16),
+                          Text(
+                            searchQuery.isNotEmpty
+                                ? 'Nenhum aluno encontrado para "$searchQuery"'
+                                : 'Nenhum aluno cadastrado',
+                            style: const TextStyle(
+                              fontSize: 18,
+                              color: AppColors.lightTextSecondary,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                        ],
+                      ),
+                    );
+                  }
+
+                  return ListView.builder(
+                    padding: const EdgeInsets.all(16),
+                    itemCount: students.length,
+                    itemBuilder: (context, index) {
+                      final student = students[index];
+                      return _StudentAllEvaluationsCard(
+                        student: student,
+                        checklistRepo: _checklistRepo,
+                        selectedCapFilter: _selectedCap,
+                      );
+                    },
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -228,10 +258,10 @@ class _CapFilterChip extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           decoration: BoxDecoration(
-            color: isSelected ? color : AppColors.darkSurfaceVariant,
+            color: isSelected ? color : Colors.white,
             borderRadius: BorderRadius.circular(20),
             border: Border.all(
-              color: isSelected ? color : AppColors.darkDivider,
+              color: isSelected ? color : AppColors.lightDivider,
               width: 2,
             ),
           ),
@@ -239,8 +269,10 @@ class _CapFilterChip extends StatelessWidget {
             label,
             style: TextStyle(
               color: isSelected
-                  ? (label == 'AMARELA' || label == 'BRANCA' ? Colors.black87 : Colors.white)
-                  : AppColors.darkTextPrimary,
+                  ? (label == 'AMARELA' || label == 'BRANCA'
+                        ? Colors.black87
+                        : Colors.white)
+                  : AppColors.lightTextPrimary,
               fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
               fontSize: 12,
             ),
@@ -287,7 +319,7 @@ class _StudentAllEvaluationsCard extends StatelessWidget {
         if (checklistsSnapshot.connectionState == ConnectionState.waiting) {
           return Card(
             margin: const EdgeInsets.only(bottom: 12),
-            color: AppColors.darkSurface,
+            color: Colors.white,
             child: const Padding(
               padding: EdgeInsets.all(16),
               child: Center(child: CircularProgressIndicator()),
@@ -299,7 +331,9 @@ class _StudentAllEvaluationsCard extends StatelessWidget {
 
         // Aplicar filtro se selecionado
         if (selectedCapFilter != null) {
-          allChecklists = allChecklists.where((c) => c.cap == selectedCapFilter).toList();
+          allChecklists = allChecklists
+              .where((c) => c.cap == selectedCapFilter)
+              .toList();
         }
 
         // Se não tem nenhum checklist após filtro, não mostrar o card
@@ -309,7 +343,7 @@ class _StudentAllEvaluationsCard extends StatelessWidget {
 
         return Card(
           margin: const EdgeInsets.only(bottom: 16),
-          color: AppColors.darkSurface,
+          color: Colors.white,
           elevation: 2,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -321,9 +355,11 @@ class _StudentAllEvaluationsCard extends StatelessWidget {
                   children: [
                     CircleAvatar(
                       radius: 28,
-                      backgroundColor: AppColors.darkOrangeAccent,
+                      backgroundColor: AppColors.primary,
                       child: Text(
-                        student.name.isNotEmpty ? student.name[0].toUpperCase() : '?',
+                        student.name.isNotEmpty
+                            ? student.name[0].toUpperCase()
+                            : '?',
                         style: const TextStyle(
                           fontSize: 24,
                           fontWeight: FontWeight.bold,
@@ -341,7 +377,7 @@ class _StudentAllEvaluationsCard extends StatelessWidget {
                             style: const TextStyle(
                               fontSize: 18,
                               fontWeight: FontWeight.bold,
-                              color: AppColors.darkTextPrimary,
+                              color: AppColors.lightTextPrimary,
                             ),
                           ),
                           const SizedBox(height: 4),
@@ -349,7 +385,7 @@ class _StudentAllEvaluationsCard extends StatelessWidget {
                             'Touca Atual: ${student.level.name.toUpperCase()}',
                             style: const TextStyle(
                               fontSize: 13,
-                              color: AppColors.darkTextSecondary,
+                              color: AppColors.lightTextSecondary,
                             ),
                           ),
                         ],
@@ -358,7 +394,7 @@ class _StudentAllEvaluationsCard extends StatelessWidget {
                   ],
                 ),
               ),
-              const Divider(height: 1, color: AppColors.darkDivider),
+              const Divider(height: 1, color: AppColors.lightDivider),
 
               // Lista de todas as avaliações
               ...allChecklists.map((checklist) {
@@ -439,9 +475,13 @@ class _ChecklistProgressItem extends StatelessWidget {
           child: Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: isCurrentLevel ? AppColors.darkSurfaceVariant : Colors.transparent,
+              color: isCurrentLevel
+                  ? AppColors.lightBackgroundMiddle.withOpacity(0.3)
+                  : Colors.transparent,
               border: Border(
-                bottom: BorderSide(color: AppColors.darkDivider.withOpacity(0.3)),
+                bottom: BorderSide(
+                  color: AppColors.lightDivider.withOpacity(0.5),
+                ),
               ),
             ),
             child: Column(
@@ -450,7 +490,10 @@ class _ChecklistProgressItem extends StatelessWidget {
                 Row(
                   children: [
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 4,
+                      ),
                       decoration: BoxDecoration(
                         color: _capColorForLevel(checklist.cap),
                         borderRadius: BorderRadius.circular(12),
@@ -458,7 +501,9 @@ class _ChecklistProgressItem extends StatelessWidget {
                       child: Text(
                         'Touca ${checklist.cap.name.toUpperCase()}',
                         style: TextStyle(
-                          color: checklist.cap == CapLevel.branca || checklist.cap == CapLevel.amarela
+                          color:
+                              checklist.cap == CapLevel.branca ||
+                                  checklist.cap == CapLevel.amarela
                               ? Colors.black87
                               : Colors.white,
                           fontWeight: FontWeight.bold,
@@ -469,9 +514,12 @@ class _ChecklistProgressItem extends StatelessWidget {
                     if (isCurrentLevel) ...[
                       const SizedBox(width: 8),
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 4,
+                        ),
                         decoration: BoxDecoration(
-                          color: AppColors.darkOrangeAccent,
+                          color: AppColors.primary,
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: const Text(
@@ -486,9 +534,16 @@ class _ChecklistProgressItem extends StatelessWidget {
                     ],
                     const Spacer(),
                     if (checklist.allCompleted)
-                      Icon(Icons.check_circle, color: Colors.green.shade400, size: 24),
+                      Icon(
+                        Icons.check_circle,
+                        color: Colors.green.shade400,
+                        size: 24,
+                      ),
                     const SizedBox(width: 8),
-                    const Icon(Icons.chevron_right, color: AppColors.darkTextSecondary),
+                    const Icon(
+                      Icons.chevron_right,
+                      color: AppColors.lightTextSecondary,
+                    ),
                   ],
                 ),
                 const SizedBox(height: 12),
@@ -500,9 +555,11 @@ class _ChecklistProgressItem extends StatelessWidget {
                         child: LinearProgressIndicator(
                           value: progress,
                           minHeight: 8,
-                          backgroundColor: AppColors.darkBackground,
+                          backgroundColor: AppColors.lightDivider,
                           valueColor: AlwaysStoppedAnimation<Color>(
-                            progress == 1.0 ? Colors.green.shade400 : _capColorForLevel(checklist.cap),
+                            progress == 1.0
+                                ? Colors.green.shade400
+                                : _capColorForLevel(checklist.cap),
                           ),
                         ),
                       ),
@@ -513,7 +570,7 @@ class _ChecklistProgressItem extends StatelessWidget {
                       style: const TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 14,
-                        color: AppColors.darkTextPrimary,
+                        color: AppColors.lightTextPrimary,
                       ),
                     ),
                   ],
@@ -523,7 +580,7 @@ class _ChecklistProgressItem extends StatelessWidget {
                   '${(progress * 100).toStringAsFixed(0)}% completo',
                   style: const TextStyle(
                     fontSize: 12,
-                    color: AppColors.darkTextSecondary,
+                    color: AppColors.lightTextSecondary,
                   ),
                 ),
               ],

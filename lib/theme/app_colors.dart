@@ -1,38 +1,51 @@
 import 'package:flutter/material.dart';
 
-/// Centraliza as cores do app - Tema Laranja e Preto
+/// Centraliza as cores do app - Tema AquaNível (Azul/Ciano)
 class AppColors {
   AppColors._();
 
-  // Marca - Laranja e Preto
-  static const Color primaryOrange = Color(0xFFFF6B00); // Laranja vibrante
-  static const Color primaryOrangeDark = Color(0xFFE65100); // Laranja escuro
-  static const Color primaryOrangeLight = Color(0xFFFF9E40); // Laranja claro
-  static const Color black = Color(0xFF1A1A1A); // Preto principal
-  static const Color blackLight = Color(0xFF2D2D2D); // Preto claro
-  static const Color blackDark = Color(0xFF000000); // Preto puro
+  // Marca - Azul e Ciano
+  static const Color primary = Color(0xFF01579B); // Azul Escuro (Light Mode Primary)
+  static const Color primaryDark = Color(0xFF0a1929); // Azul Muito Escuro (Dark Mode Background)
+  static const Color primaryLight = Color(0xFF4FC3F7); // Azul Claro (Dark Mode Accent)
+  
+  static const Color secondary = Color(0xFF26C6DA); // Ciano
+  static const Color accent = Color(0xFFFFD54F); // Amarelo/Dourado
 
+  static const Color black = Color(0xFF0a1929); // Usando o tom escuro do tema
+  static const Color blackLight = Color(0xFF1a2332); 
+  
   // Feedback
   static const Color success = Color(0xFF4CAF50);
   static const Color warning = Color(0xFFFFA726);
   static const Color error = Color(0xFFE53935);
 
   // Tema Claro
-  static const Color lightBackground = Color(0xFFFAFAFA);
+  static const Color lightBackgroundStart = Color(0xFFE1F5FE);
+  static const Color lightBackgroundMiddle = Color(0xFFB3E5FC);
+  static const Color lightBackgroundEnd = Color(0xFF81D4FA);
+  
   static const Color lightSurface = Color(0xFFFFFFFF);
-  static const Color lightTextPrimary = Color(0xFF1A1A1A);
-  static const Color lightTextSecondary = Color(0xFF666666);
-  static const Color lightDivider = Color(0xFFE0E0E0);
+  static const Color lightTextPrimary = Color(0xFF01579B);
+  static const Color lightTextSecondary = Color(0xFF0277BD);
+  static const Color lightDivider = Color(0xFFB3E5FC);
 
-  // Tema Escuro - Cinzas ainda mais claros
-  static const Color darkBackground = Color(0xFF252525); // Cinza bem mais claro
-  static const Color darkSurface = Color(0xFF353535); // Cinza médio mais claro para cards
-  static const Color darkSurfaceVariant = Color(0xFF454545); // Ainda mais claro
-  static const Color darkTextPrimary = Color(0xFFFFFFFF); // Branco puro
-  static const Color darkTextSecondary = Color(0xFFD0D0D0); // Cinza muito claro
-  static const Color darkDivider = Color(0xFF606060); // Divisor bem claro e visível
+  // Tema Escuro
+  static const Color darkBackgroundStart = Color(0xFF0a1929);
+  static const Color darkBackgroundMiddle = Color(0xFF1a2332);
+  static const Color darkBackgroundEnd = Color(0xFF0f1b2d);
+  
+  static const Color darkSurface = Color(0xFF1a2332); // Card bg
+  static const Color darkSurfaceVariant = Color(0xFF263238);
+  static const Color darkTextPrimary = Color(0xFFFFFFFF);
+  static const Color darkTextSecondary = Color(0xFFB0BEC5);
+  static const Color darkDivider = Color(0xFF4FC3F7); // Com opacidade no uso
 
-  // Laranja vibrante para modo escuro
-  static const Color darkOrangeAccent = Color(0xFFFF7700); // Laranja mais vibrante
-  static const Color darkOrangeHighlight = Color(0xFFFF9500); // Laranja brilhante
+  // Mapeamento para compatibilidade (Depreciado - Refatorar depois)
+  static const Color primaryOrange = primary; 
+  static const Color primaryOrangeDark = primaryDark;
+  static const Color primaryOrangeLight = primaryLight;
+  static const Color darkOrangeAccent = primaryLight; // No dark mode, o destaque é o azul claro
+  static const Color darkOrangeHighlight = secondary;
+  static const Color darkBackground = darkBackgroundStart; // Fallback para cor sólida
 }

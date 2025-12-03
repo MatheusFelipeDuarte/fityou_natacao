@@ -1,0 +1,65 @@
+{
+  "name": "Avaliacao",
+  "type": "object",
+  "properties": {
+    "aluno_id": {
+      "type": "string",
+      "description": "ID do aluno avaliado"
+    },
+    "aluno_nome": {
+      "type": "string",
+      "description": "Nome do aluno (para facilitar consultas)"
+    },
+    "nivel": {
+      "type": "string",
+      "enum": [
+        "branca",
+        "amarela",
+        "verde",
+        "azul",
+        "vermelha",
+        "preta"
+      ],
+      "description": "N\u00edvel (cor da touca) sendo avaliado"
+    },
+    "data_avaliacao": {
+      "type": "string",
+      "format": "date",
+      "description": "Data da avalia\u00e7\u00e3o"
+    },
+    "questoes_respondidas": {
+      "type": "object",
+      "description": "Respostas para cada quest\u00e3o espec\u00edfica do n\u00edvel (true = conclu\u00eddo, false = n\u00e3o conclu\u00eddo)",
+      "additionalProperties": {
+        "type": "boolean"
+      }
+    },
+    "progresso_percentual": {
+      "type": "number",
+      "description": "Percentual de conclus\u00e3o da avalia\u00e7\u00e3o (0-100)"
+    },
+    "questoes_concluidas": {
+      "type": "integer",
+      "description": "N\u00famero de quest\u00f5es conclu\u00eddas"
+    },
+    "total_questoes": {
+      "type": "integer",
+      "description": "Total de quest\u00f5es do n\u00edvel"
+    },
+    "concluido": {
+      "type": "boolean",
+      "default": false,
+      "description": "Se a avalia\u00e7\u00e3o foi 100% conclu\u00edda"
+    },
+    "professor_nome": {
+      "type": "string",
+      "description": "Nome do professor que realizou a avalia\u00e7\u00e3o"
+    }
+  },
+  "required": [
+    "aluno_id",
+    "aluno_nome",
+    "nivel",
+    "data_avaliacao"
+  ]
+}

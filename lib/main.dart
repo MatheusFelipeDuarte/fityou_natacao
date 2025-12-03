@@ -21,9 +21,9 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Fit You Natação',
       debugShowCheckedModeBanner: false,
-      theme: AppTheme.dark(), // Tema escuro como principal
-      darkTheme: AppTheme.dark(),
-      themeMode: ThemeMode.dark, // Força o tema escuro
+      theme: AppTheme.light(), // Tema escuro como principal
+      darkTheme: AppTheme.light(),
+      themeMode: ThemeMode.light, // Força o tema escuro
       home: const AuthGate(),
     );
   }
@@ -38,7 +38,9 @@ class AuthGate extends StatelessWidget {
       stream: FirebaseAuth.instance.authStateChanges(),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Scaffold(body: Center(child: CircularProgressIndicator()));
+          return const Scaffold(
+            body: Center(child: CircularProgressIndicator()),
+          );
         }
         final user = snapshot.data;
         if (user == null) {

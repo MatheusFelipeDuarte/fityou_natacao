@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import '../../theme/app_colors.dart';
 import '../../services/role_service.dart';
 import '../students/students_page.dart';
 import '../students/student_search_page.dart';
@@ -48,8 +49,8 @@ class _AppDrawerState extends State<AppDrawer> {
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
                 colors: [
-                  Theme.of(context).colorScheme.primary,
-                  Theme.of(context).colorScheme.primary.withOpacity(0.7),
+                  AppColors.primary,
+                  AppColors.primaryLight,
                 ],
               ),
             ),

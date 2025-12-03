@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import '../../data/models/student.dart';
 import '../../data/repositories/student_repository.dart';
+import '../../theme/app_colors.dart';
+import '../widgets/app_background.dart';
 
 class StudentFormPage extends StatefulWidget {
   const StudentFormPage({super.key, this.initial});
@@ -84,7 +86,11 @@ class _StudentFormPageState extends State<StudentFormPage> {
   }
 
   Future<void> _submit() async {
-    if (!_formKey.currentState!.validate()) return;
+    print('DEBUG: _submit called');
+    if (!_formKey.currentState!.validate()) {
+      print('DEBUG: Validation failed');
+      return;
+    }
 
     // Validação assíncrona adicional do CPF do aluno
     final studentCpfValue = _studentCpfController.text.trim();
@@ -92,10 +98,7 @@ class _StudentFormPageState extends State<StudentFormPage> {
       final cpfError = await _validateStudentCpfUnique(studentCpfValue);
       if (cpfError != null) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(cpfError),
-            backgroundColor: Colors.red,
-          ),
+          SnackBar(content: Text(cpfError), backgroundColor: Colors.red),
         );
         setState(() => _busy = false);
         return;
@@ -124,21 +127,14 @@ class _StudentFormPageState extends State<StudentFormPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      extendBodyBehindAppBar: true,
+      backgroundColor: Colors.transparent,
       appBar: AppBar(
         title: Text(widget.initial == null ? 'Novo Aluno' : 'Editar Aluno'),
         elevation: 0,
+        backgroundColor: Colors.transparent,
       ),
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              Theme.of(context).colorScheme.primary.withOpacity(0.05),
-              Theme.of(context).colorScheme.background,
-            ],
-          ),
-        ),
+      body: AppBackground(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(16),
           child: Card(
@@ -163,14 +159,13 @@ class _StudentFormPageState extends State<StudentFormPage> {
                           gradient: LinearGradient(
                             begin: Alignment.topLeft,
                             end: Alignment.bottomRight,
-                            colors: [
-                              Theme.of(context).colorScheme.primary,
-                              Theme.of(context).colorScheme.primary.withOpacity(0.7),
-                            ],
+                            colors: [AppColors.primary, AppColors.primaryLight],
                           ),
                         ),
                         child: Icon(
-                          widget.initial == null ? Icons.person_add : Icons.edit,
+                          widget.initial == null
+                              ? Icons.person_add
+                              : Icons.edit,
                           size: 50,
                           color: Colors.white,
                         ),
@@ -178,11 +173,12 @@ class _StudentFormPageState extends State<StudentFormPage> {
                     ),
                     const SizedBox(height: 24),
                     Text(
-                      widget.initial == null ? 'Adicionar Novo Aluno' : 'Editar Dados do Aluno',
+                      widget.initial == null
+                          ? 'Adicionar Novo Aluno'
+                          : 'Editar Dados do Aluno',
                       textAlign: TextAlign.center,
-                      style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
+                      style: Theme.of(context).textTheme.headlineSmall
+                          ?.copyWith(fontWeight: FontWeight.bold),
                     ),
                     const SizedBox(height: 8),
                     Text(
@@ -195,30 +191,43 @@ class _StudentFormPageState extends State<StudentFormPage> {
                     ),
                     const SizedBox(height: 32),
                     TextFormField(
+                      key: const Key('student_name_field'),
                       controller: _nameController,
                       decoration: InputDecoration(
                         labelText: 'Nome Completo',
+                        labelStyle: TextStyle(
+                          color: Theme.of(context).brightness == Brightness.dark
+                              ? AppColors.darkTextPrimary
+                              : Colors.grey.shade800,
+                          fontWeight: FontWeight.w500,
+                        ),
                         prefixIcon: const Icon(Icons.person_outline),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
                         ),
-                        filled: true,
-                        fillColor: Colors.grey.shade50,
                       ),
-                      validator: (v) => (v == null || v.trim().isEmpty) ? 'Informe o nome' : null,
+                      validator: (v) => (v == null || v.trim().isEmpty)
+                          ? 'Informe o nome'
+                          : null,
                     ),
                     const SizedBox(height: 16),
                     TextFormField(
+                      key: const Key('student_phone_field'),
                       controller: _phoneController,
                       decoration: InputDecoration(
                         labelText: 'Telefone',
+                        labelStyle: TextStyle(
+                          color: Theme.of(context).brightness == Brightness.dark
+                              ? AppColors.darkTextPrimary
+                              : Colors.grey.shade800,
+                          fontWeight: FontWeight.w500,
+                        ),
                         hintText: '(XX) XXXXX-XXXX',
+                        hintStyle: TextStyle(color: Colors.grey.shade500),
                         prefixIcon: const Icon(Icons.phone_outlined),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
                         ),
-                        filled: true,
-                        fillColor: Colors.grey.shade50,
                       ),
                       keyboardType: TextInputType.phone,
                       validator: (v) {
@@ -232,7 +241,14 @@ class _StudentFormPageState extends State<StudentFormPage> {
                       controller: _studentCpfController,
                       decoration: InputDecoration(
                         labelText: 'CPF do Aluno (Opcional)',
+                        labelStyle: TextStyle(
+                          color: Theme.of(context).brightness == Brightness.dark
+                              ? AppColors.darkTextPrimary
+                              : Colors.grey.shade800,
+                          fontWeight: FontWeight.w500,
+                        ),
                         hintText: 'XXX.XXX.XXX-XX',
+                        hintStyle: TextStyle(color: Colors.grey.shade500),
                         prefixIcon: const Icon(Icons.badge_outlined),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
@@ -240,43 +256,67 @@ class _StudentFormPageState extends State<StudentFormPage> {
                         filled: true,
                         fillColor: Colors.grey.shade50,
                         helperText: 'Opcional - deixe em branco se não tiver',
+                        helperStyle: TextStyle(
+                          color: Colors.grey.shade600,
+                          fontWeight: FontWeight.w500,
+                        ),
                       ),
                       keyboardType: TextInputType.number,
                       validator: (v) => _validateCpf(v, required: false),
                     ),
                     const SizedBox(height: 16),
                     TextFormField(
+                      key: const Key('guardian_cpf_field'),
                       controller: _guardianCpfController,
                       decoration: InputDecoration(
                         labelText: 'CPF do Responsável *',
+                        labelStyle: TextStyle(
+                          color: Theme.of(context).brightness == Brightness.dark
+                              ? AppColors.darkTextPrimary
+                              : Colors.grey.shade800,
+                          fontWeight: FontWeight.w500,
+                        ),
                         hintText: 'XXX.XXX.XXX-XX',
-                        prefixIcon: const Icon(Icons.supervisor_account_outlined),
+                        hintStyle: TextStyle(color: Colors.grey.shade500),
+                        prefixIcon: const Icon(
+                          Icons.supervisor_account_outlined,
+                        ),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
                         ),
                         filled: true,
                         fillColor: Colors.grey.shade50,
                         helperText: '* Campo obrigatório',
+                        helperStyle: TextStyle(
+                          color: Colors.grey.shade600,
+                          fontWeight: FontWeight.w500,
+                        ),
                       ),
                       keyboardType: TextInputType.number,
                       validator: (v) => _validateCpf(v, required: true),
                     ),
                     const SizedBox(height: 16),
                     TextFormField(
+                      key: const Key('student_age_field'),
                       controller: _ageController,
                       decoration: InputDecoration(
                         labelText: 'Idade',
+                        labelStyle: TextStyle(
+                          color: Theme.of(context).brightness == Brightness.dark
+                              ? AppColors.darkTextPrimary
+                              : Colors.grey.shade800,
+                          fontWeight: FontWeight.w500,
+                        ),
                         prefixIcon: const Icon(Icons.cake_outlined),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
                         ),
-                        filled: true,
-                        fillColor: Colors.grey.shade50,
                       ),
                       keyboardType: TextInputType.number,
                       validator: (v) {
                         final n = int.tryParse(v ?? '');
-                        if (n == null || n <= 0) return 'Informe uma idade válida';
+                        if (n == null || n <= 0)
+                          return 'Informe uma idade válida';
                         return null;
                       },
                     ),
@@ -285,33 +325,40 @@ class _StudentFormPageState extends State<StudentFormPage> {
                       value: _level,
                       decoration: InputDecoration(
                         labelText: 'Nível (Touca)',
+                        labelStyle: TextStyle(
+                          color: Theme.of(context).brightness == Brightness.dark
+                              ? AppColors.darkTextPrimary
+                              : Colors.grey.shade800,
+                          fontWeight: FontWeight.w500,
+                        ),
                         prefixIcon: const Icon(Icons.pool),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
                         ),
-                        filled: true,
-                        fillColor: Colors.grey.shade50,
                       ),
                       items: CapLevel.values
-                          .map((e) => DropdownMenuItem(
-                                value: e,
-                                child: Row(
-                                  children: [
-                                    Container(
-                                      width: 16,
-                                      height: 16,
-                                      decoration: BoxDecoration(
-                                        color: _getCapColor(e),
-                                        shape: BoxShape.circle,
-                                      ),
+                          .map(
+                            (e) => DropdownMenuItem(
+                              value: e,
+                              child: Row(
+                                children: [
+                                  Container(
+                                    width: 16,
+                                    height: 16,
+                                    decoration: BoxDecoration(
+                                      color: _getCapColor(e),
+                                      shape: BoxShape.circle,
                                     ),
-                                    const SizedBox(width: 8),
-                                    Text(e.name.toUpperCase()),
-                                  ],
-                                ),
-                              ))
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Text(e.name.toUpperCase()),
+                                ],
+                              ),
+                            ),
+                          )
                           .toList(),
-                      onChanged: (v) => setState(() => _level = v ?? CapLevel.azul),
+                      onChanged: (v) =>
+                          setState(() => _level = v ?? CapLevel.azul),
                     ),
                     const SizedBox(height: 20),
                     Container(
@@ -321,14 +368,20 @@ class _StudentFormPageState extends State<StudentFormPage> {
                         border: Border.all(color: Colors.grey.shade300),
                       ),
                       child: SwitchListTile(
+                        key: const Key('active_switch'),
                         value: _active,
                         title: const Text(
                           'Aluno Ativo',
                           style: TextStyle(fontWeight: FontWeight.w500),
                         ),
                         subtitle: Text(
-                          _active ? 'Aluno pode frequentar as aulas' : 'Aluno está inativo',
-                          style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+                          _active
+                              ? 'Aluno pode frequentar as aulas'
+                              : 'Aluno está inativo',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.grey.shade600,
+                          ),
                         ),
                         onChanged: (v) => setState(() => _active = v),
                         activeColor: Colors.green,
@@ -343,7 +396,9 @@ class _StudentFormPageState extends State<StudentFormPage> {
                       children: [
                         Expanded(
                           child: OutlinedButton.icon(
-                            onPressed: _busy ? null : () => Navigator.of(context).pop(),
+                            onPressed: _busy
+                                ? null
+                                : () => Navigator.of(context).pop(),
                             icon: const Icon(Icons.close),
                             label: const Text('Cancelar'),
                             style: OutlinedButton.styleFrom(
@@ -358,6 +413,7 @@ class _StudentFormPageState extends State<StudentFormPage> {
                         Expanded(
                           flex: 2,
                           child: ElevatedButton.icon(
+                            key: const Key('save_student_button'),
                             onPressed: _busy ? null : _submit,
                             icon: _busy
                                 ? const SizedBox(
@@ -365,11 +421,19 @@ class _StudentFormPageState extends State<StudentFormPage> {
                                     height: 20,
                                     child: CircularProgressIndicator(
                                       strokeWidth: 2,
-                                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                                      valueColor: AlwaysStoppedAnimation<Color>(
+                                        Colors.white,
+                                      ),
                                     ),
                                   )
-                                : Icon(widget.initial == null ? Icons.add : Icons.save),
-                            label: Text(widget.initial == null ? 'Adicionar' : 'Salvar'),
+                                : Icon(
+                                    widget.initial == null
+                                        ? Icons.add
+                                        : Icons.save,
+                                  ),
+                            label: Text(
+                              widget.initial == null ? 'Adicionar' : 'Salvar',
+                            ),
                             style: ElevatedButton.styleFrom(
                               padding: const EdgeInsets.symmetric(vertical: 16),
                               shape: RoundedRectangleBorder(

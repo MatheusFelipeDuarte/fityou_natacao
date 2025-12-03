@@ -3,8 +3,13 @@ import 'package:firebase_auth/firebase_auth.dart';
 class RoleService {
   const RoleService();
 
+  static RoleService? mockInstance;
+
   /// Retorna o conjunto de roles do usuário atual, ex.: {'admin', 'professor'}
   Future<Set<String>> getRoles({bool forceRefresh = false}) async {
+    if (mockInstance != null) {
+      return mockInstance!.getRoles(forceRefresh: forceRefresh);
+    }
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return {};
     final token = await user.getIdTokenResult(forceRefresh);

@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_functions/cloud_functions.dart';
 import '../../services/role_service.dart';
+import '../../theme/app_colors.dart';
+import '../widgets/app_background.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -93,21 +95,14 @@ class _ProfilePageState extends State<ProfilePage> {
   Widget build(BuildContext context) {
     final user = FirebaseAuth.instance.currentUser;
     return Scaffold(
+      extendBodyBehindAppBar: true,
+      backgroundColor: Colors.transparent,
       appBar: AppBar(
         title: const Text('Meu Perfil'),
         elevation: 0,
+        backgroundColor: Colors.transparent,
       ),
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              Theme.of(context).colorScheme.primary.withOpacity(0.05),
-              Theme.of(context).colorScheme.background,
-            ],
-          ),
-        ),
+      body: AppBackground(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(16),
           child: Column(
@@ -132,8 +127,8 @@ class _ProfilePageState extends State<ProfilePage> {
                             begin: Alignment.topLeft,
                             end: Alignment.bottomRight,
                             colors: [
-                              Theme.of(context).colorScheme.primary,
-                              Theme.of(context).colorScheme.primary.withOpacity(0.7),
+                              AppColors.primary,
+                              AppColors.primaryLight,
                             ],
                           ),
                         ),
@@ -202,7 +197,7 @@ class _ProfilePageState extends State<ProfilePage> {
                               ),
                               backgroundColor: role == 'admin'
                                   ? Colors.purple.shade600
-                                  : Colors.blue.shade600,
+                                  : AppColors.primary,
                             );
                           }).toList(),
                         ),
@@ -310,7 +305,7 @@ class _ProfilePageState extends State<ProfilePage> {
                 color: Colors.red.shade50,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(20),
-                  side: BorderSide(color: Colors.red.shade200),
+                  side: BorderSide(color: Colors.red.shade300, width: 2),
                 ),
                 child: Padding(
                   padding: const EdgeInsets.all(24),
@@ -322,12 +317,12 @@ class _ProfilePageState extends State<ProfilePage> {
                           Container(
                             padding: const EdgeInsets.all(10),
                             decoration: BoxDecoration(
-                              color: Colors.red.shade100,
+                              color: Colors.red.shade700,
                               borderRadius: BorderRadius.circular(12),
                             ),
-                            child: Icon(
+                            child: const Icon(
                               Icons.warning_outlined,
-                              color: Colors.red.shade700,
+                              color: Colors.white,
                             ),
                           ),
                           const SizedBox(width: 12),
@@ -340,14 +335,14 @@ class _ProfilePageState extends State<ProfilePage> {
                                   style: TextStyle(
                                     fontSize: 18,
                                     fontWeight: FontWeight.bold,
-                                    color: Colors.red.shade700,
+                                    color: Colors.red.shade900,
                                   ),
                                 ),
                                 Text(
                                   'Ações irreversíveis',
                                   style: TextStyle(
                                     fontSize: 12,
-                                    color: Colors.red.shade600,
+                                    color: Colors.red.shade800,
                                   ),
                                 ),
                               ],
@@ -356,10 +351,14 @@ class _ProfilePageState extends State<ProfilePage> {
                         ],
                       ),
                       const SizedBox(height: 16),
-                      const Text(
+                      Text(
                         'Deletar sua conta é uma ação permanente e não pode ser desfeita. '
                         'Todos os seus dados serão removidos.',
-                        style: TextStyle(fontSize: 13),
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: Colors.grey.shade800,
+                          fontWeight: FontWeight.w500,
+                        ),
                       ),
                       const SizedBox(height: 16),
                       OutlinedButton.icon(
@@ -367,8 +366,8 @@ class _ProfilePageState extends State<ProfilePage> {
                         icon: const Icon(Icons.delete_forever),
                         label: const Text('Deletar Minha Conta'),
                         style: OutlinedButton.styleFrom(
-                          foregroundColor: Colors.red.shade700,
-                          side: BorderSide(color: Colors.red.shade700, width: 2),
+                          foregroundColor: Colors.red.shade900,
+                          side: BorderSide(color: Colors.red.shade900, width: 2),
                           padding: const EdgeInsets.symmetric(vertical: 16),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12),

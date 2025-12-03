@@ -7,6 +7,7 @@ import '../../services/role_service.dart';
 import '../widgets/app_drawer.dart';
 import 'student_detail_page.dart';
 import '../../theme/app_colors.dart';
+import '../widgets/app_background.dart';
 
 class StudentsPage extends StatefulWidget {
   const StudentsPage({super.key});
@@ -30,7 +31,11 @@ class _StudentsPageState extends State<StudentsPage> {
 
   Future<void> _loadRoles() async {
     final roles = await _roleService.getRoles(forceRefresh: true);
-    if (mounted) setState(() { _roles = roles; _loadingRoles = false; });
+    if (mounted)
+      setState(() {
+        _roles = roles;
+        _loadingRoles = false;
+      });
   }
 
   @override
@@ -41,10 +46,11 @@ class _StudentsPageState extends State<StudentsPage> {
 
   @override
   Widget build(BuildContext context) {
-  final isTablet = Responsive.isTablet(context);
-  final padding = EdgeInsets.all(Responsive.responsivePadding(context));
+    final isTablet = Responsive.isTablet(context);
+    final padding = EdgeInsets.all(Responsive.responsivePadding(context));
 
-    final canCreateStudent = _roles.contains('admin') || _roles.contains('professor');
+    final canCreateStudent =
+        _roles.contains('admin') || _roles.contains('professor');
     return Scaffold(
       appBar: AppBar(
         title: const Text('Alunos'),
@@ -63,8 +69,9 @@ class _StudentsPageState extends State<StudentsPage> {
         ],
       ),
       drawer: const AppDrawer(),
-      body: Container(
-        color: AppColors.darkBackground, // Fundo sólido CINZA - SEM GRADIENTE
+      extendBodyBehindAppBar: true,
+      backgroundColor: Colors.transparent,
+      body: AppBackground(
         child: Padding(
           padding: padding,
           child: Column(
@@ -73,25 +80,33 @@ class _StudentsPageState extends State<StudentsPage> {
               // Barra de pesquisa moderna
               Container(
                 decoration: BoxDecoration(
-                  color: AppColors.darkSurface,
+                  color: Colors.white,
                   borderRadius: BorderRadius.circular(16),
-                  border: Border.all(
-                    color: AppColors.darkDivider,
-                    width: 1,
-                  ),
+                  border: Border.all(color: AppColors.lightDivider, width: 1),
                 ),
                 child: TextField(
                   controller: _searchController,
-                  style: const TextStyle(color: AppColors.darkTextPrimary),
+                  style: const TextStyle(color: AppColors.lightTextPrimary),
                   decoration: InputDecoration(
                     labelText: 'Pesquisar alunos',
-                    labelStyle: const TextStyle(color: AppColors.darkTextSecondary),
+                    labelStyle: const TextStyle(
+                      color: AppColors.lightTextSecondary,
+                    ),
                     hintText: 'Digite o nome do aluno...',
-                    hintStyle: TextStyle(color: AppColors.darkTextSecondary.withOpacity(0.6)),
-                    prefixIcon: const Icon(Icons.search, size: 24, color: AppColors.darkTextSecondary),
+                    hintStyle: TextStyle(
+                      color: AppColors.lightTextSecondary.withOpacity(0.6),
+                    ),
+                    prefixIcon: const Icon(
+                      Icons.search,
+                      size: 24,
+                      color: AppColors.lightTextSecondary,
+                    ),
                     suffixIcon: _searchController.text.isNotEmpty
                         ? IconButton(
-                            icon: const Icon(Icons.clear, color: AppColors.darkTextSecondary),
+                            icon: const Icon(
+                              Icons.clear,
+                              color: AppColors.lightTextSecondary,
+                            ),
                             onPressed: () {
                               _searchController.clear();
                               setState(() {});
@@ -99,7 +114,10 @@ class _StudentsPageState extends State<StudentsPage> {
                           )
                         : null,
                     border: InputBorder.none,
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 20,
+                      vertical: 16,
+                    ),
                   ),
                   onChanged: (_) => setState(() {}),
                 ),
@@ -112,9 +130,12 @@ class _StudentsPageState extends State<StudentsPage> {
                     final width = constraints.maxWidth;
                     final spacing = isTablet ? 16.0 : 12.0;
                     final targetTileWidth = isTablet ? 360.0 : 300.0;
-                    int crossAxisCount = (width / (targetTileWidth)).floor().clamp(1, 6);
+                    int crossAxisCount = (width / (targetTileWidth))
+                        .floor()
+                        .clamp(1, 6);
                     // Ajuste fino se sobrar muito espaço
-                    if (crossAxisCount == 1 && width > targetTileWidth * 1.4) crossAxisCount = 2;
+                    if (crossAxisCount == 1 && width > targetTileWidth * 1.4)
+                      crossAxisCount = 2;
                     final totalSpacing = spacing * (crossAxisCount - 1);
                     final tileWidth = (width - totalSpacing) / crossAxisCount;
                     // Altura desejada ajustada para evitar overflow do conteúdo interno
@@ -122,12 +143,16 @@ class _StudentsPageState extends State<StudentsPage> {
                     final aspectRatio = tileWidth / desiredHeight;
 
                     return StreamBuilder<List<Student>>(
-                      stream: _repo.streamStudents(nameQuery: _searchController.text, activeOnly: true),
+                      stream: _repo.streamStudents(
+                        nameQuery: _searchController.text,
+                        activeOnly: true,
+                      ),
                       builder: (context, snapshot) {
-                        if (snapshot.connectionState == ConnectionState.waiting) {
+                        if (snapshot.connectionState ==
+                            ConnectionState.waiting) {
                           return const Center(
                             child: CircularProgressIndicator(
-                              color: AppColors.darkOrangeAccent,
+                              color: AppColors.primary,
                             ),
                           );
                         }
@@ -143,24 +168,25 @@ class _StudentsPageState extends State<StudentsPage> {
                                 Icon(
                                   Icons.person_search,
                                   size: 80,
-                                  color: AppColors.darkTextSecondary,
+                                  color: AppColors.lightTextSecondary,
                                 ),
                                 const SizedBox(height: 16),
                                 Text(
                                   'Nenhum aluno encontrado',
                                   style: TextStyle(
                                     fontSize: 18,
-                                    color: AppColors.darkTextPrimary,
+                                    color: AppColors.lightTextPrimary,
                                     fontWeight: FontWeight.w500,
                                   ),
                                 ),
-                                if (_searchController.text.isEmpty && canCreateStudent) ...[
+                                if (_searchController.text.isEmpty &&
+                                    canCreateStudent) ...[
                                   const SizedBox(height: 8),
                                   Text(
                                     'Adicione o primeiro aluno',
                                     style: TextStyle(
                                       fontSize: 14,
-                                      color: AppColors.darkTextSecondary,
+                                      color: AppColors.lightTextSecondary,
                                     ),
                                   ),
                                 ],
@@ -169,12 +195,13 @@ class _StudentsPageState extends State<StudentsPage> {
                           );
                         }
                         return GridView.builder(
-                          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                            crossAxisCount: crossAxisCount,
-                            crossAxisSpacing: spacing,
-                            mainAxisSpacing: spacing,
-                            childAspectRatio: aspectRatio,
-                          ),
+                          gridDelegate:
+                              SliverGridDelegateWithFixedCrossAxisCount(
+                                crossAxisCount: crossAxisCount,
+                                crossAxisSpacing: spacing,
+                                mainAxisSpacing: spacing,
+                                childAspectRatio: aspectRatio,
+                              ),
                           itemCount: students.length,
                           itemBuilder: (context, index) {
                             final s = students[index];
@@ -218,30 +245,29 @@ class _StudentCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     void _openDetails() {
+      print('DEBUG: _openDetails called for ${student.name}');
       Navigator.of(context).push(
         MaterialPageRoute(builder: (_) => StudentDetailPage(student: student)),
       );
     }
+
     final color = _capColor(student.level, context);
     final textTheme = Theme.of(context).textTheme;
 
     return Card(
       elevation: 4,
-      color: AppColors.darkSurface,
-      shadowColor: Colors.black.withOpacity(0.5),
+      color: Colors.white,
+      shadowColor: AppColors.primary.withOpacity(0.2),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
-        side: BorderSide(
-          color: AppColors.darkDivider,
-          width: 0.5,
-        ),
+        side: const BorderSide(color: AppColors.lightDivider, width: 0.5),
       ),
       clipBehavior: Clip.antiAlias,
       child: InkWell(
         onTap: _openDetails,
         borderRadius: BorderRadius.circular(16),
-        splashColor: AppColors.darkOrangeAccent.withOpacity(0.1),
-        highlightColor: AppColors.darkOrangeAccent.withOpacity(0.05),
+        splashColor: AppColors.primary.withOpacity(0.1),
+        highlightColor: AppColors.primary.withOpacity(0.05),
         child: Padding(
           padding: const EdgeInsets.all(16),
           child: Column(
@@ -256,9 +282,13 @@ class _StudentCard extends StatelessWidget {
                     radius: 24,
                     backgroundColor: color,
                     child: Text(
-                      student.name.isNotEmpty ? student.name[0].toUpperCase() : '?',
+                      student.name.isNotEmpty
+                          ? student.name[0].toUpperCase()
+                          : '?',
                       style: TextStyle(
-                        color: student.level == CapLevel.branca || student.level == CapLevel.amarela
+                        color:
+                            student.level == CapLevel.branca ||
+                                student.level == CapLevel.amarela
                             ? Colors.black87
                             : Colors.white,
                         fontWeight: FontWeight.bold,
@@ -278,12 +308,15 @@ class _StudentCard extends StatelessWidget {
                           overflow: TextOverflow.ellipsis,
                           style: textTheme.titleMedium?.copyWith(
                             fontWeight: FontWeight.bold,
-                            color: AppColors.darkTextPrimary,
+                            color: AppColors.lightTextPrimary,
                           ),
                         ),
                         const SizedBox(height: 4),
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 2,
+                          ),
                           decoration: BoxDecoration(
                             color: color.withOpacity(0.15),
                             borderRadius: BorderRadius.circular(8),
@@ -310,7 +343,7 @@ class _StudentCard extends StatelessWidget {
                 ],
               ),
               const SizedBox(height: 10),
-              Divider(height: 1, color: AppColors.darkDivider),
+              const Divider(height: 1, color: AppColors.lightDivider),
               const SizedBox(height: 10),
               // Informações de contato
               _InfoRow(icon: Icons.phone_outlined, text: student.phone),
@@ -322,17 +355,27 @@ class _StudentCard extends StatelessWidget {
                 width: double.infinity,
                 child: TextButton.icon(
                   onPressed: _openDetails,
-                  icon: Icon(Icons.arrow_forward, size: 16, color: AppColors.darkOrangeAccent),
-                  label: Text('Ver Detalhes', style: TextStyle(color: AppColors.darkOrangeAccent, fontWeight: FontWeight.w600)),
+                  icon: const Icon(
+                    Icons.arrow_forward,
+                    size: 16,
+                    color: AppColors.primary,
+                  ),
+                  label: const Text(
+                    'Ver Detalhes',
+                    style: TextStyle(
+                      color: AppColors.primary,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
                   style: TextButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 8),
-                    backgroundColor: AppColors.darkOrangeAccent.withOpacity(0.12),
+                    backgroundColor: AppColors.primary.withOpacity(0.1),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(8),
                     ),
                   ),
                 ),
-              )
+              ),
             ],
           ),
         ),
@@ -352,16 +395,16 @@ class _InfoRow extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        Icon(icon, size: 16, color: AppColors.darkTextSecondary),
+        Icon(icon, size: 16, color: AppColors.lightTextSecondary),
         const SizedBox(width: 8),
         Expanded(
           child: Text(
             text,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: TextStyle(
+            style: const TextStyle(
               fontSize: 13,
-              color: AppColors.darkTextSecondary,
+              color: AppColors.lightTextSecondary,
             ),
           ),
         ),

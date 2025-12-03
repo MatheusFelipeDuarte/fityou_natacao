@@ -5,20 +5,28 @@ import '../../data/repositories/student_repository.dart';
 import '../../theme/app_colors.dart';
 import '../login/login_page.dart';
 import 'student_detail_page.dart';
+import '../widgets/app_background.dart';
 
 class StudentSearchPage extends StatefulWidget {
-  const StudentSearchPage({super.key});
+  const StudentSearchPage({super.key, this.studentRepository});
+  final StudentRepository? studentRepository;
 
   @override
   State<StudentSearchPage> createState() => _StudentSearchPageState();
 }
 
 class _StudentSearchPageState extends State<StudentSearchPage> {
-  final _studentRepo = StudentRepository();
+  late final StudentRepository _studentRepo;
   final _cpfController = TextEditingController();
   List<Student> _searchResults = [];
   bool _isSearching = false;
   bool _hasSearched = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _studentRepo = widget.studentRepository ?? StudentRepository();
+  }
 
   @override
   void dispose() {
@@ -31,11 +39,15 @@ class _StudentSearchPageState extends State<StudentSearchPage> {
     final numbers = cpf.replaceAll(RegExp(r'[^\d]'), '');
 
     // Limita a 11 dígitos
-    final limitedNumbers = numbers.length > 11 ? numbers.substring(0, 11) : numbers;
+    final limitedNumbers = numbers.length > 11
+        ? numbers.substring(0, 11)
+        : numbers;
 
     if (limitedNumbers.length <= 3) return limitedNumbers;
-    if (limitedNumbers.length <= 6) return '${limitedNumbers.substring(0, 3)}.${limitedNumbers.substring(3)}';
-    if (limitedNumbers.length <= 9) return '${limitedNumbers.substring(0, 3)}.${limitedNumbers.substring(3, 6)}.${limitedNumbers.substring(6)}';
+    if (limitedNumbers.length <= 6)
+      return '${limitedNumbers.substring(0, 3)}.${limitedNumbers.substring(3)}';
+    if (limitedNumbers.length <= 9)
+      return '${limitedNumbers.substring(0, 3)}.${limitedNumbers.substring(3, 6)}.${limitedNumbers.substring(6)}';
     return '${limitedNumbers.substring(0, 3)}.${limitedNumbers.substring(3, 6)}.${limitedNumbers.substring(6, 9)}-${limitedNumbers.substring(9)}';
   }
 
@@ -56,14 +68,16 @@ class _StudentSearchPageState extends State<StudentSearchPage> {
 
     try {
       // Usar o stream existente com filtro por CPF
-      final subscription = _studentRepo.streamStudents(nameQuery: cpf, activeOnly: true).listen((students) {
-        if (mounted) {
-          setState(() {
-            _searchResults = students;
-            _isSearching = false;
+      final subscription = _studentRepo
+          .streamStudents(nameQuery: cpf, activeOnly: true)
+          .listen((students) {
+            if (mounted) {
+              setState(() {
+                _searchResults = students;
+                _isSearching = false;
+              });
+            }
           });
-        }
-      });
 
       // Cancelar após 5 segundos para não manter a conexão aberta
       Future.delayed(const Duration(seconds: 5), () {
@@ -75,9 +89,9 @@ class _StudentSearchPageState extends State<StudentSearchPage> {
           _isSearching = false;
           _searchResults = [];
         });
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Erro ao buscar aluno: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Erro ao buscar aluno: $e')));
       }
     }
   }
@@ -102,15 +116,18 @@ class _StudentSearchPageState extends State<StudentSearchPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      extendBodyBehindAppBar: true,
+      backgroundColor: Colors.transparent,
       appBar: AppBar(
-        title: const Text('Fit You Natação'),
+        title: const Text('AquaNível'),
+        backgroundColor: Colors.transparent,
         elevation: 0,
         actions: [
           TextButton.icon(
             onPressed: () {
-              Navigator.of(context).push(
-                MaterialPageRoute(builder: (_) => const LoginPage()),
-              );
+              Navigator.of(
+                context,
+              ).push(MaterialPageRoute(builder: (_) => const LoginPage()));
             },
             icon: const Icon(Icons.login, color: Colors.white),
             label: const Text(
@@ -121,130 +138,126 @@ class _StudentSearchPageState extends State<StudentSearchPage> {
           const SizedBox(width: 8),
         ],
       ),
-      body: SingleChildScrollView(
-        child: Column(
-          children: [
-            // Header com gradiente
-            Container(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [
-                    Theme.of(context).colorScheme.primary,
-                    Theme.of(context).colorScheme.primary.withValues(alpha: 0.7),
+      body: AppBackground(
+        child: SingleChildScrollView(
+          child: Column(
+            children: [
+              // Header com gradiente (Simplificado para se integrar ao fundo)
+              Container(
+                padding: const EdgeInsets.all(24),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    const SizedBox(height: 60), // Espaço para AppBar
+                    const Icon(
+                      Icons.waves, // Icone de ondas do novo design
+                      size: 64,
+                      color: Colors.white,
+                    ),
+                    const SizedBox(height: 16),
+                    const Text(
+                      'Buscar Aluno',
+                      style: TextStyle(
+                        fontSize: 28,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 8),
+                    const Text(
+                      'Pesquise pelo CPF do aluno ou responsável',
+                      style: TextStyle(fontSize: 14, color: Colors.white70),
+                      textAlign: TextAlign.center,
+                    ),
                   ],
                 ),
               ),
-              padding: const EdgeInsets.all(24),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  const Icon(
-                    Icons.pool,
-                    size: 64,
-                    color: Colors.white,
-                  ),
-                  const SizedBox(height: 16),
-                  const Text(
-                    'Buscar Aluno',
-                    style: TextStyle(
-                      fontSize: 28,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 8),
-                  const Text(
-                    'Pesquise pelo CPF do aluno ou responsável',
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Colors.white70,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                ],
-              ),
-            ),
 
-            // Campo de busca
-            Padding(
-              padding: const EdgeInsets.all(16),
-              child: Card(
-                elevation: 4,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      TextField(
-                        controller: _cpfController,
-                        decoration: InputDecoration(
-                          labelText: 'CPF',
-                          hintText: '000.000.000-00',
-                          prefixIcon: const Icon(Icons.search),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
+              // Campo de busca
+              Padding(
+                padding: const EdgeInsets.all(16),
+                child: Card(
+                  color: Colors.white,
+                  elevation: 4,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        TextField(
+                          controller: _cpfController,
+                          decoration: InputDecoration(
+                            labelText: 'CPF',
+                            hintText: '000.000.000-00',
+                            prefixIcon: const Icon(Icons.search),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            suffixIcon: _cpfController.text.isNotEmpty
+                                ? IconButton(
+                                    icon: const Icon(Icons.clear),
+                                    onPressed: () {
+                                      _cpfController.clear();
+                                      setState(() {
+                                        _searchResults = [];
+                                        _hasSearched = false;
+                                      });
+                                    },
+                                  )
+                                : null,
                           ),
-                          suffixIcon: _cpfController.text.isNotEmpty
-                              ? IconButton(
-                                  icon: const Icon(Icons.clear),
-                                  onPressed: () {
-                                    _cpfController.clear();
-                                    setState(() {
-                                      _searchResults = [];
-                                      _hasSearched = false;
-                                    });
-                                  },
+                          keyboardType: TextInputType.number,
+                          inputFormatters: [
+                            FilteringTextInputFormatter.digitsOnly,
+                            LengthLimitingTextInputFormatter(11),
+                          ],
+                          onChanged: (value) {
+                            setState(() {
+                              _cpfController.text = _formatCpf(value);
+                              _cpfController.selection =
+                                  TextSelection.fromPosition(
+                                    TextPosition(
+                                      offset: _cpfController.text.length,
+                                    ),
+                                  );
+                            });
+                          },
+                          onSubmitted: (_) => _searchByCpf(),
+                        ),
+                        const SizedBox(height: 16),
+                        ElevatedButton.icon(
+                          onPressed: _isSearching ? null : _searchByCpf,
+                          icon: _isSearching
+                              ? const SizedBox(
+                                  width: 20,
+                                  height: 20,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                  ),
                                 )
-                              : null,
-                        ),
-                        keyboardType: TextInputType.number,
-                        inputFormatters: [
-                          FilteringTextInputFormatter.digitsOnly,
-                          LengthLimitingTextInputFormatter(11),
-                        ],
-                        onChanged: (value) {
-                          setState(() {
-                            _cpfController.text = _formatCpf(value);
-                            _cpfController.selection = TextSelection.fromPosition(
-                              TextPosition(offset: _cpfController.text.length),
-                            );
-                          });
-                        },
-                        onSubmitted: (_) => _searchByCpf(),
-                      ),
-                      const SizedBox(height: 16),
-                      ElevatedButton.icon(
-                        onPressed: _isSearching ? null : _searchByCpf,
-                        icon: _isSearching
-                            ? const SizedBox(
-                                width: 20,
-                                height: 20,
-                                child: CircularProgressIndicator(strokeWidth: 2),
-                              )
-                            : const Icon(Icons.search),
-                        label: Text(_isSearching ? 'Buscando...' : 'Buscar'),
-                        style: ElevatedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
+                              : const Icon(Icons.search),
+                          label: Text(_isSearching ? 'Buscando...' : 'Buscar'),
+                          style: ElevatedButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
                           ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
               ),
-            ),
 
-            // Resultados
-            _buildResults(),
-          ],
+              // Resultados
+              _buildResults(),
+            ],
+          ),
         ),
       ),
     );
@@ -254,9 +267,7 @@ class _StudentSearchPageState extends State<StudentSearchPage> {
     if (_isSearching) {
       return const Padding(
         padding: EdgeInsets.all(32.0),
-        child: Center(
-          child: CircularProgressIndicator(),
-        ),
+        child: Center(child: CircularProgressIndicator()),
       );
     }
 
@@ -267,18 +278,11 @@ class _StudentSearchPageState extends State<StudentSearchPage> {
           mainAxisSize: MainAxisSize.min,
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              Icons.person_search,
-              size: 100,
-              color: Colors.grey.shade400,
-            ),
+            Icon(Icons.person_search, size: 100, color: Colors.grey.shade400),
             const SizedBox(height: 16),
             Text(
               'Digite um CPF para buscar',
-              style: TextStyle(
-                fontSize: 16,
-                color: Colors.grey.shade600,
-              ),
+              style: TextStyle(fontSize: 16, color: Colors.grey.shade600),
             ),
           ],
         ),
@@ -295,7 +299,7 @@ class _StudentSearchPageState extends State<StudentSearchPage> {
             Icon(
               Icons.sentiment_dissatisfied,
               size: 100,
-              color: Colors.orange.shade400,
+              color: AppColors.error.withOpacity(0.7),
             ),
             const SizedBox(height: 16),
             Text(
@@ -309,10 +313,7 @@ class _StudentSearchPageState extends State<StudentSearchPage> {
             const SizedBox(height: 8),
             Text(
               'Verifique se o CPF está correto',
-              style: TextStyle(
-                fontSize: 14,
-                color: Colors.grey.shade600,
-              ),
+              style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
               textAlign: TextAlign.center,
             ),
           ],
@@ -328,6 +329,7 @@ class _StudentSearchPageState extends State<StudentSearchPage> {
       itemBuilder: (context, index) {
         final student = _searchResults[index];
         return Card(
+          color: Colors.white,
           margin: const EdgeInsets.only(bottom: 12),
           elevation: 2,
           shape: RoundedRectangleBorder(
@@ -335,9 +337,13 @@ class _StudentSearchPageState extends State<StudentSearchPage> {
           ),
           child: InkWell(
             onTap: () {
+              print('DEBUG: ListTile tapped');
               Navigator.of(context).push(
                 MaterialPageRoute(
-                  builder: (_) => StudentDetailPage(student: student),
+                  builder: (_) => StudentDetailPage(
+                    student: student,
+                    studentRepository: _studentRepo,
+                  ),
                 ),
               );
             },
@@ -348,9 +354,11 @@ class _StudentSearchPageState extends State<StudentSearchPage> {
                 children: [
                   CircleAvatar(
                     radius: 30,
-                    backgroundColor: AppColors.darkOrangeAccent,
+                    backgroundColor: AppColors.primary,
                     child: Text(
-                      student.name.isNotEmpty ? student.name[0].toUpperCase() : '?',
+                      student.name.isNotEmpty
+                          ? student.name[0].toUpperCase()
+                          : '?',
                       style: const TextStyle(
                         fontSize: 24,
                         fontWeight: FontWeight.bold,
@@ -380,7 +388,10 @@ class _StudentSearchPageState extends State<StudentSearchPage> {
                         ),
                         const SizedBox(height: 8),
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 4,
+                          ),
                           decoration: BoxDecoration(
                             color: _capColorForLevel(student.level),
                             borderRadius: BorderRadius.circular(12),
@@ -388,7 +399,9 @@ class _StudentSearchPageState extends State<StudentSearchPage> {
                           child: Text(
                             'Touca ${student.level.displayName.toUpperCase()}',
                             style: TextStyle(
-                              color: student.level == CapLevel.branca || student.level == CapLevel.amarela
+                              color:
+                                  student.level == CapLevel.branca ||
+                                      student.level == CapLevel.amarela
                                   ? Colors.black87
                                   : Colors.white,
                               fontWeight: FontWeight.bold,
@@ -402,7 +415,7 @@ class _StudentSearchPageState extends State<StudentSearchPage> {
                   const Icon(
                     Icons.arrow_forward_ios,
                     size: 20,
-                    color: AppColors.darkTextSecondary,
+                    color: AppColors.lightTextSecondary,
                   ),
                 ],
               ),

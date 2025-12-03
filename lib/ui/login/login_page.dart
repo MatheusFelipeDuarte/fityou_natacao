@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../../shared/responsive.dart';
 import '../students/students_page.dart';
+import '../widgets/app_background.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -55,47 +56,82 @@ class _LoginPageState extends State<LoginPage> {
     final padding = EdgeInsets.all(Responsive.responsivePadding(context));
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Entrar')),
-      body: Center(
-        child: SingleChildScrollView(
-          padding: padding,
-          child: ConstrainedBox(
-            constraints: BoxConstraints(maxWidth: isTablet ? 480 : 400),
-            child: Card(
-              child: Padding(
-                padding: const EdgeInsets.all(20),
-                child: Form(
-                  key: _formKey,
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      Text('Acesso restrito', style: Theme.of(context).textTheme.headlineSmall),
-                      const SizedBox(height: 12),
-                      Text('Somente usuários cadastrados pelo administrador.', style: Theme.of(context).textTheme.bodyMedium),
-                      const SizedBox(height: 20),
-                      TextFormField(
-                        controller: _emailController,
-                        decoration: const InputDecoration(labelText: 'E-mail'),
-                        keyboardType: TextInputType.emailAddress,
-                        validator: (v) => (v == null || v.isEmpty) ? 'Informe o e-mail' : null,
-                      ),
-                      const SizedBox(height: 12),
-                      TextFormField(
-                        controller: _passwordController,
-                        decoration: const InputDecoration(labelText: 'Senha'),
-                        obscureText: true,
-                        validator: (v) => (v == null || v.isEmpty) ? 'Informe a senha' : null,
-                      ),
-                      const SizedBox(height: 16),
-                      if (_error != null)
-                        Text(_error!, style: TextStyle(color: Theme.of(context).colorScheme.error)),
-                      const SizedBox(height: 8),
-                      ElevatedButton(
-                        onPressed: _busy ? null : _signIn,
-                        child: _busy ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2)) : const Text('Entrar'),
-                      ),
-                    ],
+      extendBodyBehindAppBar: true,
+      backgroundColor: Colors.transparent,
+      appBar: AppBar(
+        title: const Text('Entrar'),
+        backgroundColor: Colors.transparent,
+      ),
+      body: AppBackground(
+        child: Center(
+          child: SingleChildScrollView(
+            padding: padding,
+            child: ConstrainedBox(
+              constraints: BoxConstraints(maxWidth: isTablet ? 480 : 400),
+              child: Card(
+                child: Padding(
+                  padding: const EdgeInsets.all(20),
+                  child: Form(
+                    key: _formKey,
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Text(
+                          'Acesso restrito',
+                          style: Theme.of(context).textTheme.headlineSmall,
+                        ),
+                        const SizedBox(height: 12),
+                        Text(
+                          'Somente usuários cadastrados pelo administrador.',
+                          style: Theme.of(context).textTheme.bodyMedium,
+                        ),
+                        const SizedBox(height: 20),
+                        TextFormField(
+                          key: const Key('email_field'),
+                          controller: _emailController,
+                          decoration: const InputDecoration(
+                            labelText: 'E-mail',
+                          ),
+                          keyboardType: TextInputType.emailAddress,
+                          validator: (v) => (v == null || v.isEmpty)
+                              ? 'Informe o e-mail'
+                              : null,
+                        ),
+                        const SizedBox(height: 12),
+                        TextFormField(
+                          key: const Key('password_field'),
+                          controller: _passwordController,
+                          decoration: const InputDecoration(labelText: 'Senha'),
+                          obscureText: true,
+                          validator: (v) => (v == null || v.isEmpty)
+                              ? 'Informe a senha'
+                              : null,
+                        ),
+                        const SizedBox(height: 16),
+                        if (_error != null)
+                          Text(
+                            _error!,
+                            style: TextStyle(
+                              color: Theme.of(context).colorScheme.error,
+                            ),
+                          ),
+                        const SizedBox(height: 8),
+                        ElevatedButton(
+                          key: const Key('login_button'),
+                          onPressed: _busy ? null : _signIn,
+                          child: _busy
+                              ? const SizedBox(
+                                  height: 20,
+                                  width: 20,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                  ),
+                                )
+                              : const Text('Entrar'),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),

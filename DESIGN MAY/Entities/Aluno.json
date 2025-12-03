@@ -1,0 +1,61 @@
+{
+  "name": "Aluno",
+  "type": "object",
+  "properties": {
+    "nome": {
+      "type": "string",
+      "description": "Nome completo do aluno"
+    },
+    "cpf_aluno": {
+      "type": "string",
+      "description": "CPF do aluno"
+    },
+    "idade": {
+      "type": "integer",
+      "description": "Idade do aluno"
+    },
+    "nivel": {
+      "type": "string",
+      "enum": [
+        "branca",
+        "amarela",
+        "verde",
+        "azul",
+        "vermelha",
+        "preta"
+      ],
+      "default": "branca",
+      "description": "Cor da touca que representa o n\u00edvel"
+    },
+    "observacoes": {
+      "type": "string",
+      "description": "Observa\u00e7\u00f5es sobre o aluno"
+    },
+    "foto_url": {
+      "type": "string",
+      "description": "URL da foto do aluno"
+    },
+    "ativo": {
+      "type": "boolean",
+      "default": true,
+      "description": "Status do aluno (ativo/desativado)"
+    },
+    "responsavel_nome": {
+      "type": "string",
+      "description": "Nome do respons\u00e1vel"
+    },
+    "responsavel_cpf": {
+      "type": "string",
+      "description": "CPF do respons\u00e1vel"
+    },
+    "responsavel_telefone": {
+      "type": "string",
+      "description": "Telefone do respons\u00e1vel"
+    }
+  },
+  "required": [
+    "nome",
+    "idade",
+    "nivel"
+  ]
+}

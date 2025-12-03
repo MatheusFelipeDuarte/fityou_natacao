@@ -1,0 +1,53 @@
+Running Gradle task 'assembleDebug'...                          
+Warning: The plugin flutter_plugin_android_lifecycle requires Android SDK version 36 or higher.
+For more information about build configuration, see https://flutter.dev/to/review-gradle-config.
+Warning: The plugin path_provider_android requires Android SDK version 36 or higher.
+For more information about build configuration, see https://flutter.dev/to/review-gradle-config.
+Your project is configured to compile against Android SDK 34, but the following plugin(s) require to be compiled against a higher Android SDK version:
+- flutter_plugin_android_lifecycle compiles against Android SDK 36
+- path_provider_android compiles against Android SDK 36
+Fix this issue by compiling against the highest Android SDK version (they are backward compatible).
+Add the following to /home/bacon/repos/flutter_projects/fityou_natacao/android/app/build.gradle.kts:
+
+    android {
+        compileSdk = 36
+        ...
+    }
+
+FAILURE: Build failed with an exception.
+
+* What went wrong:
+Execution failed for task ':firebase_core:compileDebugJavaWithJavac'.
+> Could not resolve all files for configuration ':firebase_core:androidJdkImage'.
+   > Failed to transform core-for-system-modules.jar to match attributes {artifactType=_internal_android_jdk_image, org.gradle.libraryelements=jar, org.gradle.usage=java-runtime}.
+      > Execution failed for JdkImageTransform: /home/bacon/Android/Sdk/platforms/android-34/core-for-system-modules.jar.
+         > Error while executing process /opt/android-studio/jbr/bin/jlink with arguments {--module-path /home/bacon/.gradle/caches/8.10.2/transforms/3d86c03e15c7d6eaa2153fdb1381730e-a9e86118-25f7-473f-a34a-a187179510a4/transformed/output/temp/jmod --add-modules java.base --output /home/bacon/.gradle/caches/8.10.2/transforms/3d86c03e15c7d6eaa2153fdb1381730e-a9e86118-25f7-473f-a34a-a187179510a4/transformed/output/jdkImage --disable-plugin system-modules}
+
+* Try:
+> Run with --stacktrace option to get the stack trace.
+> Run with --info or --debug option to get more log output.
+> Run with --scan to get full insights.
+> Get more help at https://help.gradle.org.
+
+BUILD FAILED in 3s
+Running Gradle task 'assembleDebug'...                              3,2s
+
+┌─ Flutter Fix ────────────────────────────────────────────────────────────────────────────────────┐
+│ [!] This is likely due to a known bug in Android Gradle Plugin (AGP) versions less than 8.2.1,   │
+│ when                                                                                             │
+│   1. setting a value for SourceCompatibility and                                                 │
+│   2. using Java 21 or above.                                                                     │
+│ To fix this error, please upgrade your AGP version to at least 8.2.1. The version of AGP that    │
+│ your project uses is likely defined in:                                                          │
+│ /home/bacon/repos/flutter_projects/fityou_natacao/android/settings.gradle.kts,                   │
+│ in the 'plugins' closure (by the number following "com.android.application").                    │
+│  Alternatively, if your project was created with an older version of the templates, it is likely │
+│ in the buildscript.dependencies closure of the top-level build.gradle:                           │
+│ /home/bacon/repos/flutter_projects/fityou_natacao/android/build.gradle.kts,                      │
+│ as the number following "com.android.tools.build:gradle:".                                       │
+│                                                                                                  │
+│ For more information, see:                                                                       │
+│ https://issuetracker.google.com/issues/294137077                                                 │
+│ https://github.com/flutter/flutter/issues/156304                                                 │
+└──────────────────────────────────────────────────────────────────────────────────────────────────┘
+Gradle task assembleDebug failed with exit code 1
