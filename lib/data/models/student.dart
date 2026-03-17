@@ -1,12 +1,12 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 enum CapLevel {
-  azul,      // iniciante - Touca Azul
-  amarela,   // Touca Amarela
-  laranja,   // Touca Laranja
-  vermelha,  // Touca Vermelha
-  preta,     // avançado - Touca Preta
-  branca,    // mais avançado - Touca Branca
+  azul, // iniciante - Touca Azul
+  amarela, // Touca Amarela
+  laranja, // Touca Laranja
+  vermelha, // Touca Vermelha
+  preta, // avançado - Touca Preta
+  branca, // mais avançado - Touca Branca
 }
 
 // Extensão para obter o nome em português
@@ -37,7 +37,7 @@ class Student {
   final int age;
   final bool active;
   final String? studentCpf; // CPF do aluno (opcional)
-  final String guardianCpf; // CPF do responsável (obrigatório)
+  final String? guardianCpf; // CPF do responsável (opcional)
 
   Student({
     required this.id,
@@ -47,7 +47,7 @@ class Student {
     required this.age,
     required this.active,
     this.studentCpf,
-    required this.guardianCpf,
+    this.guardianCpf,
   });
 
   Map<String, dynamic> toMap() {
@@ -58,7 +58,7 @@ class Student {
       'age': age,
       'active': active,
       if (studentCpf != null) 'studentCpf': studentCpf,
-      'guardianCpf': guardianCpf,
+      if (guardianCpf != null) 'guardianCpf': guardianCpf,
       'updatedAt': FieldValue.serverTimestamp(),
     };
   }
@@ -76,7 +76,7 @@ class Student {
       age: (data['age'] ?? 0) as int,
       active: (data['active'] ?? true) as bool,
       studentCpf: data['studentCpf'] as String?,
-      guardianCpf: (data['guardianCpf'] ?? '') as String,
+      guardianCpf: data['guardianCpf'] as String?,
     );
   }
 }

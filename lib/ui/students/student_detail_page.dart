@@ -309,11 +309,13 @@ class _StudentDetailPageState extends State<StudentDetailPage> {
                         label: 'CPF Aluno: ${s.studentCpf}',
                       ),
                     ],
-                    const SizedBox(height: 8),
-                    _InfoChip(
-                      icon: Icons.supervisor_account_outlined,
-                      label: 'CPF Responsável: ${s.guardianCpf}',
-                    ),
+                    if (s.guardianCpf != null && s.guardianCpf!.isNotEmpty) ...[
+                      const SizedBox(height: 8),
+                      _InfoChip(
+                        icon: Icons.supervisor_account_outlined,
+                        label: 'CPF Responsável: ${s.guardianCpf}',
+                      ),
+                    ],
                   ],
                 ),
               ),
