@@ -37,7 +37,7 @@ class _StudentFormPageState extends State<StudentFormPage> {
       _phoneController.text = s.phone;
       _ageController.text = s.age.toString();
       _studentCpfController.text = s.studentCpf ?? '';
-      _guardianCpfController.text = s.guardianCpf;
+      _guardianCpfController.text = s.guardianCpf ?? '';
       _level = s.level;
       _active = s.active;
     }
@@ -114,7 +114,9 @@ class _StudentFormPageState extends State<StudentFormPage> {
       age: int.tryParse(_ageController.text.trim()) ?? 0,
       active: _active,
       studentCpf: studentCpfValue.isEmpty ? null : studentCpfValue,
-      guardianCpf: _guardianCpfController.text.trim(),
+      guardianCpf: _guardianCpfController.text.trim().isEmpty
+          ? null
+          : _guardianCpfController.text.trim(),
     );
     if (widget.initial == null) {
       await _repo.addStudent(base);
@@ -269,7 +271,7 @@ class _StudentFormPageState extends State<StudentFormPage> {
                       key: const Key('guardian_cpf_field'),
                       controller: _guardianCpfController,
                       decoration: InputDecoration(
-                        labelText: 'CPF do Responsável *',
+                        labelText: 'CPF do Responsável (Opcional)',
                         labelStyle: TextStyle(
                           color: Theme.of(context).brightness == Brightness.dark
                               ? AppColors.darkTextPrimary
@@ -286,14 +288,14 @@ class _StudentFormPageState extends State<StudentFormPage> {
                         ),
                         filled: true,
                         fillColor: Colors.grey.shade50,
-                        helperText: '* Campo obrigatório',
+                        helperText: 'Opcional - deixe em branco se não tiver',
                         helperStyle: TextStyle(
                           color: Colors.grey.shade600,
                           fontWeight: FontWeight.w500,
                         ),
                       ),
                       keyboardType: TextInputType.number,
-                      validator: (v) => _validateCpf(v, required: true),
+                      validator: (v) => _validateCpf(v, required: false),
                     ),
                     const SizedBox(height: 16),
                     TextFormField(

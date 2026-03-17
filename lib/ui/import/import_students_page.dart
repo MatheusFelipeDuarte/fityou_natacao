@@ -35,7 +35,9 @@ Pedro Oliveira,8,(31) 99999-8888,blue,55544433322,66677788899''';
             Icon(Icons.check_circle, color: Colors.white),
             const SizedBox(width: 12),
             Expanded(
-              child: Text('Conteúdo copiado! Cole em um editor de texto e salve como .csv'),
+              child: Text(
+                'Conteúdo copiado! Cole em um editor de texto e salve como .csv',
+              ),
             ),
           ],
         ),
@@ -95,10 +97,19 @@ Pedro Oliveira,8,(31) 99999-8888,blue,55544433322,66677788899''';
       print('CSV Data (${csvData.length} linhas): $csvData');
 
       // Validar cabeçalho
-      final headers = csvData.first.map((e) => e.toString().trim().toLowerCase()).toList();
+      final headers = csvData.first
+          .map((e) => e.toString().trim().toLowerCase())
+          .toList();
       print('Headers encontrados (${headers.length} colunas): $headers');
 
-      final expectedHeaders = ['name', 'age', 'phone', 'level', 'studentcpf', 'guardiancpf'];
+      final expectedHeaders = [
+        'name',
+        'age',
+        'phone',
+        'level',
+        'studentcpf',
+        'guardiancpf',
+      ];
 
       // Validação mais flexível do cabeçalho
       bool hasAllHeaders = true;
@@ -111,7 +122,9 @@ Pedro Oliveira,8,(31) 99999-8888,blue,55544433322,66677788899''';
       }
 
       if (!hasAllHeaders) {
-        throw Exception('Cabeçalho inválido. Esperado: name,age,phone,level,studentCpf,guardianCpf\nEncontrado: ${headers.join(",")}');
+        throw Exception(
+          'Cabeçalho inválido. Esperado: name,age,phone,level,studentCpf,guardianCpf\nEncontrado: ${headers.join(",")}',
+        );
       }
 
       // Processar linhas
@@ -143,7 +156,9 @@ Pedro Oliveira,8,(31) 99999-8888,blue,55544433322,66677788899''';
       print('Total de erros: ${errors.length}');
 
       if (students.isEmpty) {
-        throw Exception('Nenhum aluno válido encontrado no arquivo.\nErros: ${errors.join(", ")}');
+        throw Exception(
+          'Nenhum aluno válido encontrado no arquivo.\nErros: ${errors.join(", ")}',
+        );
       }
 
       // Mostrar diálogo de confirmação
@@ -161,12 +176,22 @@ Pedro Oliveira,8,(31) 99999-8888,blue,55544433322,66677788899''';
                 const SizedBox(height: 16),
                 Text(
                   '${errors.length} erro(s) encontrado(s):',
-                  style: const TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
+                  style: const TextStyle(
+                    color: Colors.red,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
                 const SizedBox(height: 8),
-                ...errors.take(5).map((e) => Text('• $e', style: const TextStyle(fontSize: 12))),
+                ...errors
+                    .take(5)
+                    .map(
+                      (e) => Text('• $e', style: const TextStyle(fontSize: 12)),
+                    ),
                 if (errors.length > 5)
-                  Text('... e mais ${errors.length - 5} erro(s)', style: const TextStyle(fontSize: 12)),
+                  Text(
+                    '... e mais ${errors.length - 5} erro(s)',
+                    style: const TextStyle(fontSize: 12),
+                  ),
               ],
             ],
           ),
@@ -209,16 +234,17 @@ Pedro Oliveira,8,(31) 99999-8888,blue,55544433322,66677788899''';
         SnackBar(
           content: Text(
             '✓ $successCount aluno(s) importado(s) com sucesso!' +
-            (failCount > 0 ? '\n✗ $failCount falha(s)' : ''),
+                (failCount > 0 ? '\n✗ $failCount falha(s)' : ''),
           ),
-          backgroundColor: failCount > 0 ? Colors.orange : Colors.green.shade700,
+          backgroundColor: failCount > 0
+              ? Colors.orange
+              : Colors.green.shade700,
           duration: const Duration(seconds: 4),
         ),
       );
 
       // Voltar para a página de alunos
       Navigator.of(context).pop();
-
     } catch (e) {
       if (!mounted) return;
       setState(() => _isImporting = false);
@@ -257,7 +283,6 @@ Pedro Oliveira,8,(31) 99999-8888,blue,55544433322,66677788899''';
 
     // Validações
     if (name.isEmpty) throw Exception('Nome é obrigatório');
-    if (guardianCpf.isEmpty) throw Exception('CPF do responsável é obrigatório');
 
     final age = int.tryParse(ageStr);
     if (age == null || age < 0 || age > 120) {
@@ -273,9 +298,12 @@ Pedro Oliveira,8,(31) 99999-8888,blue,55544433322,66677788899''';
     }
 
     // Validar CPFs
-    final cleanGuardianCpf = guardianCpf.replaceAll(RegExp(r'[^\d]'), '');
-    if (cleanGuardianCpf.length != 11) {
-      throw Exception('CPF do responsável deve ter 11 dígitos');
+    String? cleanGuardianCpf;
+    if (guardianCpf.isNotEmpty) {
+      cleanGuardianCpf = guardianCpf.replaceAll(RegExp(r'[^\d]'), '');
+      if (cleanGuardianCpf.length != 11) {
+        throw Exception('CPF do responsável deve ter 11 dígitos');
+      }
     }
 
     String? cleanStudentCpf;
@@ -324,10 +352,7 @@ Pedro Oliveira,8,(31) 99999-8888,blue,55544433322,66677788899''';
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Importar Alunos'),
-        elevation: 0,
-      ),
+      appBar: AppBar(title: const Text('Importar Alunos'), elevation: 0),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(24),
         child: Center(
@@ -383,7 +408,10 @@ Pedro Oliveira,8,(31) 99999-8888,blue,55544433322,66677788899''';
                       children: [
                         Row(
                           children: [
-                            Icon(Icons.info_outline, color: Colors.blue.shade400),
+                            Icon(
+                              Icons.info_outline,
+                              color: Colors.blue.shade400,
+                            ),
                             const SizedBox(width: 12),
                             const Text(
                               'Como preparar sua planilha',
@@ -399,25 +427,29 @@ Pedro Oliveira,8,(31) 99999-8888,blue,55544433322,66677788899''';
                         _InstructionStep(
                           number: '1',
                           title: 'Copie o modelo',
-                          description: 'Clique no botão abaixo para copiar o conteúdo do exemplo',
+                          description:
+                              'Clique no botão abaixo para copiar o conteúdo do exemplo',
                         ),
                         const SizedBox(height: 12),
                         _InstructionStep(
                           number: '2',
                           title: 'Crie o arquivo CSV',
-                          description: 'Cole em um editor de texto e salve como "alunos.csv"',
+                          description:
+                              'Cole em um editor de texto e salve como "alunos.csv"',
                         ),
                         const SizedBox(height: 12),
                         _InstructionStep(
                           number: '3',
                           title: 'Preencha os dados',
-                          description: 'Edite o arquivo CSV com os dados dos seus alunos',
+                          description:
+                              'Edite o arquivo CSV com os dados dos seus alunos',
                         ),
                         const SizedBox(height: 12),
                         _InstructionStep(
                           number: '4',
                           title: 'Importe o arquivo',
-                          description: 'Volte aqui e faça o upload do arquivo preenchido',
+                          description:
+                              'Volte aqui e faça o upload do arquivo preenchido',
                         ),
                       ],
                     ),
@@ -435,7 +467,10 @@ Pedro Oliveira,8,(31) 99999-8888,blue,55544433322,66677788899''';
                       children: [
                         Row(
                           children: [
-                            Icon(Icons.table_chart, color: Colors.green.shade400),
+                            Icon(
+                              Icons.table_chart,
+                              color: Colors.green.shade400,
+                            ),
                             const SizedBox(width: 12),
                             const Text(
                               'Formato da Planilha',
@@ -476,9 +511,11 @@ Pedro Oliveira,8,(31) 99999-8888,blue,55544433322,66677788899''';
                         ),
                         _FieldDescription(
                           field: 'level',
-                          description: 'Nível da touca (em português ou inglês)',
+                          description:
+                              'Nível da touca (em português ou inglês)',
                           required: true,
-                          example: 'azul, amarela, laranja, vermelha, preta, branca OU blue, yellow, orange, red, black, white',
+                          example:
+                              'azul, amarela, laranja, vermelha, preta, branca OU blue, yellow, orange, red, black, white',
                         ),
                         _FieldDescription(
                           field: 'studentCpf',
@@ -489,7 +526,7 @@ Pedro Oliveira,8,(31) 99999-8888,blue,55544433322,66677788899''';
                         _FieldDescription(
                           field: 'guardianCpf',
                           description: 'CPF do responsável (apenas números)',
-                          required: true,
+                          required: false,
                           example: '98765432100',
                         ),
                       ],
@@ -508,7 +545,10 @@ Pedro Oliveira,8,(31) 99999-8888,blue,55544433322,66677788899''';
                       children: [
                         Row(
                           children: [
-                            Icon(Icons.visibility, color: Colors.purple.shade400),
+                            Icon(
+                              Icons.visibility,
+                              color: Colors.purple.shade400,
+                            ),
                             const SizedBox(width: 12),
                             const Text(
                               'Exemplo Visual',
@@ -545,7 +585,7 @@ Pedro Oliveira,8,(31) 99999-8888,blue,55544433322,66677788899''';
                         ),
                         const SizedBox(height: 12),
                         Text(
-                          '💡 Dica: Se o aluno não tiver CPF, deixe a coluna studentCpf vazia (mas mantenha a vírgula)',
+                          '💡 Dica: Se o aluno ou responsável não tiver CPF, deixe a coluna correspondente vazia (mas mantenha as vírgulas)',
                           style: TextStyle(
                             fontSize: 12,
                             color: Colors.blue.shade300,
@@ -578,18 +618,23 @@ Pedro Oliveira,8,(31) 99999-8888,blue,55544433322,66677788899''';
                 ElevatedButton.icon(
                   onPressed: _isImporting ? null : _importCSV,
                   icon: _isImporting
-                    ? const SizedBox(
-                        width: 24,
-                        height: 24,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                        ),
-                      )
-                    : const Icon(Icons.upload, size: 24),
+                      ? const SizedBox(
+                          width: 24,
+                          height: 24,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            valueColor: AlwaysStoppedAnimation<Color>(
+                              Colors.white,
+                            ),
+                          ),
+                        )
+                      : const Icon(Icons.upload, size: 24),
                   label: Text(
                     _isImporting ? 'Importando...' : 'Importar Planilha',
-                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                   style: ElevatedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 20),
@@ -712,7 +757,9 @@ class _FieldDescription extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                 decoration: BoxDecoration(
-                  color: required ? Colors.red.shade900.withValues(alpha: 0.3) : Colors.grey.shade800,
+                  color: required
+                      ? Colors.red.shade900.withValues(alpha: 0.3)
+                      : Colors.grey.shade800,
                   borderRadius: BorderRadius.circular(4),
                 ),
                 child: Text(
@@ -720,7 +767,9 @@ class _FieldDescription extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 10,
                     fontWeight: FontWeight.bold,
-                    color: required ? Colors.red.shade300 : Colors.grey.shade400,
+                    color: required
+                        ? Colors.red.shade300
+                        : Colors.grey.shade400,
                   ),
                 ),
               ),

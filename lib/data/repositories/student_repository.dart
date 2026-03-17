@@ -3,11 +3,12 @@ import '../models/student.dart';
 
 class StudentRepository {
   StudentRepository({FirebaseFirestore? firestore})
-      : _db = firestore ?? FirebaseFirestore.instance;
+    : _db = firestore ?? FirebaseFirestore.instance;
 
   final FirebaseFirestore _db;
 
-  CollectionReference<Map<String, dynamic>> get _col => _db.collection('students');
+  CollectionReference<Map<String, dynamic>> get _col =>
+      _db.collection('students');
 
   Stream<List<Student>> streamStudents({String? nameQuery, bool? activeOnly}) {
     // Consulta básica; otimização por índice pode ser feita depois
@@ -25,8 +26,16 @@ class StudentRepository {
       // Busca por nome, CPF do aluno ou CPF do responsável
       return all.where((s) {
         final matchName = s.name.toLowerCase().contains(q);
-        final matchStudentCpf = s.studentCpf?.replaceAll(RegExp(r'[^\d]'), '').contains(q.replaceAll(RegExp(r'[^\d]'), '')) ?? false;
-        final matchGuardianCpf = s.guardianCpf.replaceAll(RegExp(r'[^\d]'), '').contains(q.replaceAll(RegExp(r'[^\d]'), ''));
+        final matchStudentCpf =
+            s.studentCpf
+                ?.replaceAll(RegExp(r'[^\d]'), '')
+                .contains(q.replaceAll(RegExp(r'[^\d]'), '')) ??
+            false;
+        final matchGuardianCpf =
+            s.guardianCpf
+                ?.replaceAll(RegExp(r'[^\d]'), '')
+                .contains(q.replaceAll(RegExp(r'[^\d]'), '')) ??
+            false;
         return matchName || matchStudentCpf || matchGuardianCpf;
       }).toList();
     });
@@ -37,7 +46,8 @@ class StudentRepository {
   }
 
   Future<void> updateStudent(Student student) async {
-    if (student.id.isEmpty) throw ArgumentError('Student id é obrigatório para atualização');
+    if (student.id.isEmpty)
+      throw ArgumentError('Student id é obrigatório para atualização');
     await _col.doc(student.id).update(student.toMap());
   }
 
