@@ -102,6 +102,7 @@ tools/admin/
 .vscode/launch.json
 .vscode/tasks.json
 *.code-workspace
+*.iml
 
 # Mac specific
 .DS_Store?
@@ -122,6 +123,11 @@ Desktop.ini
 .directory
 .Trash-*
 .nfs*
+
+# Firebase and Flutter build logs
 firebase.json
 macos/Flutter/GeneratedPluginRegistrant.swift
 functions/node_modules/
+build_log*.txt
+android/build_log*.txt
+*.log
