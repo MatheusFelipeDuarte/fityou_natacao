@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../data/models/student.dart';
 import '../../data/repositories/student_repository.dart';
 import '../../shared/responsive.dart';
@@ -25,7 +27,15 @@ class _StudentsPageState extends State<StudentsPage> {
   bool _loadingRoles = true;
   String _currentQuery = '';
   late Stream<List<Student>> _studentsStream;
+  List<Student>? _cachedStudents;
   int _limit = 20;
+
+  // Web Pagination
+  int _currentPage = 1;
+  final List<DocumentSnapshot?> _pageCursors = [null]; // null is for first page
+  List<Student> _webStudents = [];
+  bool _isLoadingWeb = false;
+  bool _hasMoreWeb = true;
 
   @override
   void initState() {
@@ -36,6 +46,7 @@ class _StudentsPageState extends State<StudentsPage> {
   }
 
   void _onScroll() {
+    if (kIsWeb) return; // Web uses numbered pagination
     if (_scrollController.position.pixels >=
         _scrollController.position.maxScrollExtent - 200) {
       if (_currentQuery.isEmpty) {
@@ -44,7 +55,44 @@ class _StudentsPageState extends State<StudentsPage> {
     }
   }
 
+  Future<void> _fetchWebPage(int page) async {
+    if (_isLoadingWeb) return;
+
+    setState(() {
+      _isLoadingWeb = true;
+      _currentPage = page;
+    });
+
+    try {
+      final snapshot = await _repo.getStudentsPage(
+        startAfter: _pageCursors[page - 1],
+        limit: _limit,
+      );
+
+      final newStudents = snapshot.docs.map(Student.fromDoc).toList();
+
+      setState(() {
+        _webStudents = newStudents;
+        _isLoadingWeb = false;
+        _hasMoreWeb = newStudents.length >= _limit;
+        
+        // Save cursor for next page if it doesn't exist
+        if (_pageCursors.length <= page && snapshot.docs.isNotEmpty) {
+          _pageCursors.add(snapshot.docs.last);
+        }
+      });
+    } catch (e) {
+      setState(() => _isLoadingWeb = false);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Erro ao carregar página: $e')),
+        );
+      }
+    }
+  }
+
   void _loadMore() {
+    if (kIsWeb) return;
     setState(() {
       _limit += 20;
       _updateStream();
@@ -56,11 +104,23 @@ class _StudentsPageState extends State<StudentsPage> {
       _searchController.clear();
       _currentQuery = '';
       _limit = 20;
-      _updateStream();
+      _cachedStudents = null;
+      _currentPage = 1;
+      _pageCursors.clear();
+      _pageCursors.add(null);
+      if (kIsWeb) {
+        _fetchWebPage(1);
+      } else {
+        _updateStream();
+      }
     });
   }
 
   void _updateStream() {
+    if (kIsWeb && _currentQuery.isEmpty) {
+      _fetchWebPage(1);
+      return;
+    }
     _studentsStream = _repo.streamStudents(
       nameQuery: _currentQuery,
       activeOnly: null,
@@ -171,95 +231,82 @@ class _StudentsPageState extends State<StudentsPage> {
                   builder: (context, constraints) {
                     // Cálculo responsivo das colunas e proporção
                     final width = constraints.maxWidth;
-                    final spacing = isTablet ? 16.0 : 12.0;
+                    final spacing = Responsive.responsiveGap(context);
+                    final horizontalPadding = Responsive.responsivePadding(context);
+                    final availableWidth = width - (horizontalPadding * 2);
+                    
                     final targetTileWidth = isTablet ? 360.0 : 300.0;
-                    int crossAxisCount = (width / (targetTileWidth))
+                    int crossAxisCount = (availableWidth / targetTileWidth)
                         .floor()
                         .clamp(1, 6);
+                    
                     // Ajuste fino se sobrar muito espaço
-                    if (crossAxisCount == 1 && width > targetTileWidth * 1.4)
+                    if (crossAxisCount == 1 && availableWidth > targetTileWidth * 1.4) {
                       crossAxisCount = 2;
+                    }
+                    
                     final totalSpacing = spacing * (crossAxisCount - 1);
-                    final tileWidth = (width - totalSpacing) / crossAxisCount;
+                    final tileWidth = (availableWidth - totalSpacing) / crossAxisCount;
+
+                    if (kIsWeb && _currentQuery.isEmpty) {
+                      if (_isLoadingWeb && _webStudents.isEmpty) {
+                        return const Center(
+                          child: CircularProgressIndicator(color: AppColors.primary),
+                        );
+                      }
+                      
+                      return Column(
+                        children: [
+                          Expanded(
+                            child: _buildGridSection(
+                              students: _webStudents,
+                              tileWidth: tileWidth,
+                              spacing: spacing,
+                              horizontalPadding: horizontalPadding,
+                              isLoadingMore: _isLoadingWeb,
+                              controller: _scrollController,
+                            ),
+                          ),
+                          _buildPaginationBar(),
+                        ],
+                      );
+                    }
 
                     return StreamBuilder<List<Student>>(
                       stream: _studentsStream,
                       builder: (context, snapshot) {
-                        if (snapshot.connectionState ==
-                            ConnectionState.waiting) {
+                        if (snapshot.hasData) {
+                          _cachedStudents = snapshot.data;
+                        }
+
+                        final students = snapshot.data ?? _cachedStudents;
+
+                        if (students == null &&
+                            snapshot.connectionState == ConnectionState.waiting) {
                           return const Center(
                             child: CircularProgressIndicator(
                               color: AppColors.primary,
                             ),
                           );
                         }
+                        
                         if (snapshot.hasError) {
                           return Center(child: Text('Erro: ${snapshot.error}'));
                         }
-                        final students = snapshot.data ?? [];
-                        if (students.isEmpty) {
-                          return Center(
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Icon(
-                                  Icons.person_search,
-                                  size: 80,
-                                  color: AppColors.lightTextSecondary,
-                                ),
-                                const SizedBox(height: 16),
-                                Text(
-                                  'Nenhum aluno encontrado',
-                                  style: TextStyle(
-                                    fontSize: 18,
-                                    color: AppColors.lightTextPrimary,
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                ),
-                                if (_searchController.text.isEmpty &&
-                                    canCreateStudent) ...[
-                                  const SizedBox(height: 8),
-                                  Text(
-                                    'Adicione o primeiro aluno',
-                                    style: TextStyle(
-                                      fontSize: 14,
-                                      color: AppColors.lightTextSecondary,
-                                    ),
-                                  ),
-                                ],
-                              ],
-                            ),
-                          );
+
+                        final displayList = students ?? [];
+                        
+                        if (displayList.isEmpty) {
+                          return _buildEmptyState();
                         }
-                        return ListView.builder(
+
+                        return _buildGridSection(
+                          students: displayList,
+                          tileWidth: tileWidth,
+                          spacing: spacing,
+                          horizontalPadding: horizontalPadding,
+                          isLoadingMore: (displayList.length >= _limit || snapshot.connectionState == ConnectionState.waiting) && !kIsWeb,
                           controller: _scrollController,
-                          padding: EdgeInsets.symmetric(
-                            horizontal: spacing,
-                            vertical: spacing,
-                          ),
-                          itemCount:
-                              students.length +
-                              (students.length >= _limit ? 1 : 0),
-                          itemBuilder: (context, index) {
-                            if (index == students.length) {
-                              return const Padding(
-                                padding: EdgeInsets.all(16.0),
-                                child: Center(
-                                  child: CircularProgressIndicator(
-                                    color: AppColors.primary,
-                                  ),
-                                ),
-                              );
-                            }
-                            final s = students[index];
-                            return Padding(
-                              padding: const EdgeInsets.only(bottom: 16.0),
-                              child: _StudentCard(
-                                student: s,
-                                query: _currentQuery,
-                              ),
-                            );
-                          },
                         );
                       },
                     );
@@ -269,6 +316,128 @@ class _StudentsPageState extends State<StudentsPage> {
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildEmptyState() {
+    final canCreateStudent = _roles.contains('admin') || _roles.contains('secretary');
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            Icons.person_search,
+            size: 80,
+            color: AppColors.lightTextSecondary,
+          ),
+          const SizedBox(height: 16),
+          const Text(
+            'Nenhum aluno encontrado',
+            style: TextStyle(
+              fontSize: 18,
+              color: AppColors.lightTextPrimary,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+          if (_searchController.text.isEmpty && canCreateStudent) ...[
+            const SizedBox(height: 8),
+            const Text(
+              'Adicione o primeiro aluno',
+              style: TextStyle(
+                fontSize: 14,
+                color: AppColors.lightTextSecondary,
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildGridSection({
+    required List<Student> students,
+    required double tileWidth,
+    required double spacing,
+    required double horizontalPadding,
+    required bool isLoadingMore,
+    required ScrollController controller,
+  }) {
+    return ListView(
+      controller: controller,
+      padding: EdgeInsets.symmetric(
+        horizontal: horizontalPadding,
+        vertical: spacing,
+      ),
+      children: [
+        Wrap(
+          spacing: spacing,
+          runSpacing: spacing,
+          children: students.map((s) {
+            return SizedBox(
+              width: tileWidth,
+              child: _StudentCard(
+                student: s,
+                query: _currentQuery,
+              ),
+            );
+          }).toList(),
+        ),
+        if (isLoadingMore)
+          Padding(
+            padding: const EdgeInsets.all(32.0),
+            child: Center(
+              child: CircularProgressIndicator(
+                color: AppColors.primary,
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+
+  Widget _buildPaginationBar() {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 16),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.9),
+        border: Border(top: BorderSide(color: AppColors.lightDivider)),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          ElevatedButton.icon(
+            onPressed: _currentPage > 1 ? () => _fetchWebPage(_currentPage - 1) : null,
+            icon: const Icon(Icons.chevron_left),
+            label: const Text('Anterior'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.white,
+              foregroundColor: AppColors.primary,
+              elevation: 0,
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24),
+            child: Text(
+              'Página $_currentPage',
+              style: const TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 16,
+                color: AppColors.lightTextPrimary,
+              ),
+            ),
+          ),
+          ElevatedButton.icon(
+            onPressed: _hasMoreWeb ? () => _fetchWebPage(_currentPage + 1) : null,
+            icon: const Icon(Icons.chevron_right),
+            label: const Text('Próxima'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.white,
+              foregroundColor: AppColors.primary,
+              elevation: 0,
+            ),
+          ),
+        ],
       ),
     );
   }

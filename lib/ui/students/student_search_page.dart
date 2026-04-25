@@ -6,6 +6,7 @@ import '../../theme/app_colors.dart';
 import '../login/login_page.dart';
 import 'student_detail_page.dart';
 import '../widgets/app_background.dart';
+import '../../shared/responsive.dart';
 
 class StudentSearchPage extends StatefulWidget {
   const StudentSearchPage({super.key, this.studentRepository});
@@ -69,7 +70,7 @@ class _StudentSearchPageState extends State<StudentSearchPage> {
     try {
       // Usar o stream existente com filtro por CPF
       final subscription = _studentRepo
-          .streamStudents(nameQuery: query, activeOnly: true)
+          .streamStudents(nameQuery: query, activeOnly: true, cpfOnly: true)
           .listen((students) {
             if (mounted) {
               setState(() {
@@ -191,8 +192,8 @@ class _StudentSearchPageState extends State<StudentSearchPage> {
                         TextField(
                           controller: _searchController,
                           decoration: InputDecoration(
-                            labelText: 'Nome ou CPF',
-                            hintText: 'Digite o nome ou CPF...',
+                            labelText: 'CPF do Aluno ou Responsável',
+                            hintText: 'Digite o CPF para consultar...',
                             prefixIcon: const Icon(Icons.search),
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
@@ -277,7 +278,7 @@ class _StudentSearchPageState extends State<StudentSearchPage> {
             Icon(Icons.person_search, size: 100, color: Colors.grey.shade400),
             const SizedBox(height: 16),
             Text(
-              'Pesquise pelo nome, CPF ou Telefone',
+              'Pesquise pelo CPF do Aluno ou Responsável',
               style: TextStyle(fontSize: 16, color: Colors.grey.shade600),
             ),
           ],
@@ -317,106 +318,126 @@ class _StudentSearchPageState extends State<StudentSearchPage> {
       );
     }
 
-    return ListView.builder(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      itemCount: _searchResults.length,
-      itemBuilder: (context, index) {
-        final student = _searchResults[index];
-        return Card(
-          color: Colors.white,
-          margin: const EdgeInsets.only(bottom: 12),
-          elevation: 2,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final width = constraints.maxWidth;
+        final spacing = Responsive.responsiveGap(context);
+        final horizontalPadding = Responsive.responsivePadding(context);
+        final availableWidth = width - (horizontalPadding * 2);
+        
+        final targetTileWidth = width > 600 ? 360.0 : width;
+        int crossAxisCount = (availableWidth / targetTileWidth).floor().clamp(1, 4);
+        
+        final totalSpacing = spacing * (crossAxisCount - 1);
+        final tileWidth = (availableWidth - totalSpacing) / crossAxisCount;
+
+        return Padding(
+          padding: EdgeInsets.symmetric(
+            horizontal: horizontalPadding, 
+            vertical: spacing
           ),
-          child: InkWell(
-            onTap: () {
-              print('DEBUG: ListTile tapped');
-              Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (_) => StudentDetailPage(
-                    student: student,
-                    studentRepository: _studentRepo,
+          child: Wrap(
+            spacing: spacing,
+            runSpacing: spacing,
+            children: _searchResults.map((student) {
+              return SizedBox(
+                width: tileWidth,
+                child: Card(
+                  color: Colors.white,
+                  margin: EdgeInsets.zero,
+                  elevation: 2,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
                   ),
-                ),
-              );
-            },
-            borderRadius: BorderRadius.circular(12),
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Row(
-                children: [
-                  CircleAvatar(
-                    radius: 30,
-                    backgroundColor: AppColors.primary,
-                    child: Text(
-                      student.name.isNotEmpty
-                          ? student.name[0].toUpperCase()
-                          : '?',
-                      style: const TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
+                  child: InkWell(
+                    onTap: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) => StudentDetailPage(
+                            student: student,
+                            studentRepository: _studentRepo,
+                          ),
+                        ),
+                      );
+                    },
+                    borderRadius: BorderRadius.circular(12),
+                    child: Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Row(
+                        children: [
+                          CircleAvatar(
+                            radius: 30,
+                            backgroundColor: AppColors.primary,
+                            child: Text(
+                              student.name.isNotEmpty
+                                  ? student.name[0].toUpperCase()
+                                  : '?',
+                              style: const TextStyle(
+                                fontSize: 24,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  student.name,
+                                  style: const TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                _buildMatchBadge(student),
+                                const SizedBox(height: 4),
+                                Text(
+                                  'Idade: ${student.age} anos',
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    color: Colors.grey.shade600,
+                                  ),
+                                ),
+                                const SizedBox(height: 8),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 12,
+                                    vertical: 4,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: _capColorForLevel(student.level),
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: Text(
+                                    'Touca ${student.level.displayName.toUpperCase()}',
+                                    style: TextStyle(
+                                      color:
+                                          student.level == CapLevel.branca ||
+                                              student.level == CapLevel.amarela
+                                          ? Colors.black87
+                                          : Colors.white,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 12,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const Icon(
+                            Icons.arrow_forward_ios,
+                            size: 20,
+                            color: AppColors.lightTextSecondary,
+                          ),
+                        ],
                       ),
                     ),
                   ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          student.name,
-                          style: const TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        _buildMatchBadge(student),
-                        const SizedBox(height: 4),
-                        Text(
-                          'Idade: ${student.age} anos',
-                          style: TextStyle(
-                            fontSize: 14,
-                            color: Colors.grey.shade600,
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 4,
-                          ),
-                          decoration: BoxDecoration(
-                            color: _capColorForLevel(student.level),
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Text(
-                            'Touca ${student.level.displayName.toUpperCase()}',
-                            style: TextStyle(
-                              color:
-                                  student.level == CapLevel.branca ||
-                                      student.level == CapLevel.amarela
-                                  ? Colors.black87
-                                  : Colors.white,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 12,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const Icon(
-                    Icons.arrow_forward_ios,
-                    size: 20,
-                    color: AppColors.lightTextSecondary,
-                  ),
-                ],
-              ),
-            ),
+                ),
+              );
+            }).toList(),
           ),
         );
       },

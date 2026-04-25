@@ -10,7 +10,12 @@ class StudentRepository {
   CollectionReference<Map<String, dynamic>> get _col =>
       _db.collection('students');
 
-  Stream<List<Student>> streamStudents({String? nameQuery, bool? activeOnly, int? limit}) {
+  Stream<List<Student>> streamStudents({
+    String? nameQuery,
+    bool? activeOnly,
+    int? limit,
+    bool cpfOnly = false,
+  }) {
     var query = _col.orderBy('name');
     if (limit != null && (nameQuery == null || nameQuery.isEmpty)) {
       query = query.limit(limit);
@@ -28,21 +33,41 @@ class StudentRepository {
 
       return all.where((s) {
         final normalizedName = _normalize(s.name);
-        final matchName = normalizedName.contains(q);
+        final matchName = cpfOnly ? false : normalizedName.contains(q);
 
         final cleanQuery = nameQuery.replaceAll(RegExp(r'[^\d]'), '');
         if (cleanQuery.isEmpty) return matchName;
 
-        final matchStudentCpf =
-            s.studentCpf?.replaceAll(RegExp(r'[^\d]'), '').contains(cleanQuery) ?? false;
-        final matchGuardianCpf =
-            s.guardianCpf?.replaceAll(RegExp(r'[^\d]'), '').contains(cleanQuery) ?? false;
-        final matchPhone =
-            s.phone.replaceAll(RegExp(r'[^\d]'), '').contains(cleanQuery);
+        final matchStudentCpf = s.studentCpf
+                ?.replaceAll(RegExp(r'[^\d]'), '')
+                .contains(cleanQuery) ??
+            false;
+        final matchGuardianCpf = s.guardianCpf
+                ?.replaceAll(RegExp(r'[^\d]'), '')
+                .contains(cleanQuery) ??
+            false;
+        final matchPhone = s.phone
+            .replaceAll(RegExp(r'[^\d]'), '')
+            .contains(cleanQuery);
 
         return matchName || matchStudentCpf || matchGuardianCpf || matchPhone;
       }).toList();
     });
+  }
+
+  Future<QuerySnapshot<Map<String, dynamic>>> getStudentsPage({
+    DocumentSnapshot? startAfter,
+    int limit = 20,
+    bool? activeOnly,
+  }) async {
+    var query = _col.orderBy('name');
+    if (activeOnly != null) {
+      query = query.where('active', isEqualTo: activeOnly);
+    }
+    if (startAfter != null) {
+      query = query.startAfterDocument(startAfter);
+    }
+    return query.limit(limit).get();
   }
 
   String _normalize(String str) {
