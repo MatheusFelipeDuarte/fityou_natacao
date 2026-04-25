@@ -15,6 +15,7 @@ class StudentRepository {
     bool? activeOnly,
     int? limit,
     bool cpfOnly = false,
+    bool exactMatch = false,
   }) {
     var query = _col.orderBy('name');
     if (limit != null && (nameQuery == null || nameQuery.isEmpty)) {
@@ -33,22 +34,27 @@ class StudentRepository {
 
       return all.where((s) {
         final normalizedName = _normalize(s.name);
-        final matchName = cpfOnly ? false : normalizedName.contains(q);
+        
+        final matchName = cpfOnly 
+            ? false 
+            : (exactMatch ? normalizedName == q : normalizedName.contains(q));
 
         final cleanQuery = nameQuery.replaceAll(RegExp(r'[^\d]'), '');
         if (cleanQuery.isEmpty) return matchName;
 
-        final matchStudentCpf = s.studentCpf
-                ?.replaceAll(RegExp(r'[^\d]'), '')
-                .contains(cleanQuery) ??
-            false;
-        final matchGuardianCpf = s.guardianCpf
-                ?.replaceAll(RegExp(r'[^\d]'), '')
-                .contains(cleanQuery) ??
-            false;
-        final matchPhone = s.phone
-            .replaceAll(RegExp(r'[^\d]'), '')
-            .contains(cleanQuery);
+        final cleanStudentCpf = s.studentCpf?.replaceAll(RegExp(r'[^\d]'), '') ?? '';
+        final cleanGuardianCpf = s.guardianCpf?.replaceAll(RegExp(r'[^\d]'), '') ?? '';
+        final cleanPhone = s.phone.replaceAll(RegExp(r'[^\d]'), '');
+
+        final matchStudentCpf = exactMatch 
+            ? cleanStudentCpf == cleanQuery 
+            : cleanStudentCpf.contains(cleanQuery);
+        final matchGuardianCpf = exactMatch 
+            ? cleanGuardianCpf == cleanQuery 
+            : cleanGuardianCpf.contains(cleanQuery);
+        final matchPhone = exactMatch 
+            ? cleanPhone == cleanQuery 
+            : cleanPhone.contains(cleanQuery);
 
         return matchName || matchStudentCpf || matchGuardianCpf || matchPhone;
       }).toList();

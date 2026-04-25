@@ -70,7 +70,12 @@ class _StudentSearchPageState extends State<StudentSearchPage> {
     try {
       // Usar o stream existente com filtro por CPF
       final subscription = _studentRepo
-          .streamStudents(nameQuery: query, activeOnly: true, cpfOnly: true)
+          .streamStudents(
+            nameQuery: query,
+            activeOnly: true,
+            cpfOnly: true,
+            exactMatch: true,
+          )
           .listen((students) {
             if (mounted) {
               setState(() {
@@ -192,8 +197,8 @@ class _StudentSearchPageState extends State<StudentSearchPage> {
                         TextField(
                           controller: _searchController,
                           decoration: InputDecoration(
-                            labelText: 'CPF do Aluno ou Responsável',
-                            hintText: 'Digite o CPF para consultar...',
+                            labelText: 'CPF ou Telefone',
+                            hintText: 'Digite CPF ou Telefone para consultar...',
                             prefixIcon: const Icon(Icons.search),
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
@@ -278,7 +283,7 @@ class _StudentSearchPageState extends State<StudentSearchPage> {
             Icon(Icons.person_search, size: 100, color: Colors.grey.shade400),
             const SizedBox(height: 16),
             Text(
-              'Pesquise pelo CPF do Aluno ou Responsável',
+              'Pesquise pelo CPF ou Telefone',
               style: TextStyle(fontSize: 16, color: Colors.grey.shade600),
             ),
           ],
