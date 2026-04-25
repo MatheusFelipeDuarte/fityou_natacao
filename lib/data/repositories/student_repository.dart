@@ -10,35 +10,49 @@ class StudentRepository {
   CollectionReference<Map<String, dynamic>> get _col =>
       _db.collection('students');
 
-  Stream<List<Student>> streamStudents({String? nameQuery, bool? activeOnly}) {
-    // Consulta básica; otimização por índice pode ser feita depois
-    final query = _col.orderBy('name');
+  Stream<List<Student>> streamStudents({String? nameQuery, bool? activeOnly, int? limit}) {
+    var query = _col.orderBy('name');
+    if (limit != null && (nameQuery == null || nameQuery.isEmpty)) {
+      query = query.limit(limit);
+    }
     return query.snapshots().map((snap) {
       var all = snap.docs.map(Student.fromDoc).toList();
 
-      // Filtrar por status ativo/inativo
       if (activeOnly != null) {
         all = all.where((s) => s.active == activeOnly).toList();
       }
 
-      if (nameQuery == null || nameQuery.isEmpty) return all;
-      final q = nameQuery.trim().toLowerCase();
-      // Busca por nome, CPF do aluno ou CPF do responsável
+      if (nameQuery == null || nameQuery.trim().isEmpty) return all;
+
+      final q = _normalize(nameQuery);
+
       return all.where((s) {
-        final matchName = s.name.toLowerCase().contains(q);
+        final normalizedName = _normalize(s.name);
+        final matchName = normalizedName.contains(q);
+
+        final cleanQuery = nameQuery.replaceAll(RegExp(r'[^\d]'), '');
+        if (cleanQuery.isEmpty) return matchName;
+
         final matchStudentCpf =
-            s.studentCpf
-                ?.replaceAll(RegExp(r'[^\d]'), '')
-                .contains(q.replaceAll(RegExp(r'[^\d]'), '')) ??
-            false;
+            s.studentCpf?.replaceAll(RegExp(r'[^\d]'), '').contains(cleanQuery) ?? false;
         final matchGuardianCpf =
-            s.guardianCpf
-                ?.replaceAll(RegExp(r'[^\d]'), '')
-                .contains(q.replaceAll(RegExp(r'[^\d]'), '')) ??
-            false;
-        return matchName || matchStudentCpf || matchGuardianCpf;
+            s.guardianCpf?.replaceAll(RegExp(r'[^\d]'), '').contains(cleanQuery) ?? false;
+        final matchPhone =
+            s.phone.replaceAll(RegExp(r'[^\d]'), '').contains(cleanQuery);
+
+        return matchName || matchStudentCpf || matchGuardianCpf || matchPhone;
       }).toList();
     });
+  }
+
+  String _normalize(String str) {
+    var withDia = 'ÀÁÂÃÄÅàáâãäåÒÓÔÕÖØòóôõöøÈÉÊËèéêëÇçÌÍÎÏìíîïÙÚÛÜùúûüÿÑñ';
+    var withoutDia = 'AAAAAAaaaaaaOOOOOOooooooEEEEeeeeCcIIIIiiiiUUUUuuuuyNn';
+    String result = str.toLowerCase();
+    for (int i = 0; i < withDia.length; i++) {
+      result = result.replaceAll(withDia[i], withoutDia[i]);
+    }
+    return result.trim();
   }
 
   Future<void> addStudent(Student student) async {

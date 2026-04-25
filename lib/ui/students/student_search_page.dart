@@ -17,7 +17,7 @@ class StudentSearchPage extends StatefulWidget {
 
 class _StudentSearchPageState extends State<StudentSearchPage> {
   late final StudentRepository _studentRepo;
-  final _cpfController = TextEditingController();
+  final _searchController = TextEditingController();
   List<Student> _searchResults = [];
   bool _isSearching = false;
   bool _hasSearched = false;
@@ -30,7 +30,7 @@ class _StudentSearchPageState extends State<StudentSearchPage> {
 
   @override
   void dispose() {
-    _cpfController.dispose();
+    _searchController.dispose();
     super.dispose();
   }
 
@@ -51,9 +51,9 @@ class _StudentSearchPageState extends State<StudentSearchPage> {
     return '${limitedNumbers.substring(0, 3)}.${limitedNumbers.substring(3, 6)}.${limitedNumbers.substring(6, 9)}-${limitedNumbers.substring(9)}';
   }
 
-  void _searchByCpf() async {
-    final cpf = _cpfController.text.trim();
-    if (cpf.isEmpty) {
+  void _searchByValue() async {
+    final query = _searchController.text.trim();
+    if (query.isEmpty) {
       setState(() {
         _searchResults = [];
         _hasSearched = false;
@@ -69,7 +69,7 @@ class _StudentSearchPageState extends State<StudentSearchPage> {
     try {
       // Usar o stream existente com filtro por CPF
       final subscription = _studentRepo
-          .streamStudents(nameQuery: cpf, activeOnly: true)
+          .streamStudents(nameQuery: query, activeOnly: true)
           .listen((students) {
             if (mounted) {
               setState(() {
@@ -166,7 +166,7 @@ class _StudentSearchPageState extends State<StudentSearchPage> {
                     ),
                     const SizedBox(height: 8),
                     const Text(
-                      'Pesquise pelo CPF do aluno ou responsável',
+                      'Pesquise pelo nome, CPF ou Telefone',
                       style: TextStyle(fontSize: 14, color: Colors.white70),
                       textAlign: TextAlign.center,
                     ),
@@ -189,19 +189,19 @@ class _StudentSearchPageState extends State<StudentSearchPage> {
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
                         TextField(
-                          controller: _cpfController,
+                          controller: _searchController,
                           decoration: InputDecoration(
-                            labelText: 'CPF',
-                            hintText: '000.000.000-00',
+                            labelText: 'Nome ou CPF',
+                            hintText: 'Digite o nome ou CPF...',
                             prefixIcon: const Icon(Icons.search),
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
                             ),
-                            suffixIcon: _cpfController.text.isNotEmpty
+                            suffixIcon: _searchController.text.isNotEmpty
                                 ? IconButton(
                                     icon: const Icon(Icons.clear),
                                     onPressed: () {
-                                      _cpfController.clear();
+                                      _searchController.clear();
                                       setState(() {
                                         _searchResults = [];
                                         _hasSearched = false;
@@ -210,27 +210,23 @@ class _StudentSearchPageState extends State<StudentSearchPage> {
                                   )
                                 : null,
                           ),
-                          keyboardType: TextInputType.number,
-                          inputFormatters: [
-                            FilteringTextInputFormatter.digitsOnly,
-                            LengthLimitingTextInputFormatter(11),
-                          ],
                           onChanged: (value) {
-                            setState(() {
-                              _cpfController.text = _formatCpf(value);
-                              _cpfController.selection =
-                                  TextSelection.fromPosition(
-                                    TextPosition(
-                                      offset: _cpfController.text.length,
-                                    ),
-                                  );
-                            });
+                            // Se parecer CPF (só números), formata. Se não, deixa normal.
+                            final numbers = value.replaceAll(RegExp(r'[^\d]'), '');
+                            if (numbers.length > 5 && numbers.length == value.length) {
+                               // Só tenta formatar se for puramente números
+                               _searchController.text = _formatCpf(value);
+                               _searchController.selection = TextSelection.fromPosition(
+                                  TextPosition(offset: _searchController.text.length),
+                               );
+                            }
+                            setState(() {});
                           },
-                          onSubmitted: (_) => _searchByCpf(),
+                          onSubmitted: (_) => _searchByValue(),
                         ),
                         const SizedBox(height: 16),
                         ElevatedButton.icon(
-                          onPressed: _isSearching ? null : _searchByCpf,
+                          onPressed: _isSearching ? null : _searchByValue,
                           icon: _isSearching
                               ? const SizedBox(
                                   width: 20,
@@ -281,7 +277,7 @@ class _StudentSearchPageState extends State<StudentSearchPage> {
             Icon(Icons.person_search, size: 100, color: Colors.grey.shade400),
             const SizedBox(height: 16),
             Text(
-              'Digite um CPF para buscar',
+              'Pesquise pelo nome, CPF ou Telefone',
               style: TextStyle(fontSize: 16, color: Colors.grey.shade600),
             ),
           ],
@@ -378,6 +374,7 @@ class _StudentSearchPageState extends State<StudentSearchPage> {
                             fontWeight: FontWeight.bold,
                           ),
                         ),
+                        _buildMatchBadge(student),
                         const SizedBox(height: 4),
                         Text(
                           'Idade: ${student.age} anos',
@@ -423,6 +420,61 @@ class _StudentSearchPageState extends State<StudentSearchPage> {
           ),
         );
       },
+    );
+  }
+
+  Widget _buildMatchBadge(Student student) {
+    final query = _searchController.text;
+    if (query.isEmpty) return const SizedBox.shrink();
+
+    final cleanQuery = query.replaceAll(RegExp(r'[^\d]'), '');
+    final matchStudentCpf =
+        student.studentCpf?.replaceAll(RegExp(r'[^\d]'), '').contains(cleanQuery) ?? false;
+    final matchGuardianCpf =
+        student.guardianCpf?.replaceAll(RegExp(r'[^\d]'), '').contains(cleanQuery) ?? false;
+    final matchPhone =
+        student.phone.replaceAll(RegExp(r'[^\d]'), '').contains(cleanQuery);
+
+    String? label;
+    IconData? icon;
+
+    if (cleanQuery.isNotEmpty) {
+      if (matchStudentCpf) {
+        label = 'CPF Aluno';
+        icon = Icons.badge_outlined;
+      } else if (matchGuardianCpf) {
+        label = 'CPF Responsável';
+        icon = Icons.family_restroom_outlined;
+      } else if (matchPhone) {
+        label = 'Telefone';
+        icon = Icons.phone_android_outlined;
+      }
+    }
+
+    if (label == null) return const SizedBox.shrink();
+
+    return Container(
+      margin: const EdgeInsets.only(top: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      decoration: BoxDecoration(
+        color: AppColors.primary.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(4),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 10, color: AppColors.primary),
+          const SizedBox(width: 4),
+          Text(
+            label,
+            style: const TextStyle(
+              fontSize: 9,
+              fontWeight: FontWeight.bold,
+              color: AppColors.primary,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

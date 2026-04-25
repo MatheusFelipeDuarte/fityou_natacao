@@ -19,14 +19,53 @@ class StudentsPage extends StatefulWidget {
 class _StudentsPageState extends State<StudentsPage> {
   final _repo = StudentRepository();
   final _searchController = TextEditingController();
+  final _scrollController = ScrollController();
   final _roleService = const RoleService();
   Set<String> _roles = const {};
   bool _loadingRoles = true;
+  String _currentQuery = '';
+  late Stream<List<Student>> _studentsStream;
+  int _limit = 20;
 
   @override
   void initState() {
     super.initState();
     _loadRoles();
+    _updateStream();
+    _scrollController.addListener(_onScroll);
+  }
+
+  void _onScroll() {
+    if (_scrollController.position.pixels >=
+        _scrollController.position.maxScrollExtent - 200) {
+      if (_currentQuery.isEmpty) {
+        _loadMore();
+      }
+    }
+  }
+
+  void _loadMore() {
+    setState(() {
+      _limit += 20;
+      _updateStream();
+    });
+  }
+
+  void _resetSearch() {
+    setState(() {
+      _searchController.clear();
+      _currentQuery = '';
+      _limit = 20;
+      _updateStream();
+    });
+  }
+
+  void _updateStream() {
+    _studentsStream = _repo.streamStudents(
+      nameQuery: _currentQuery,
+      activeOnly: null,
+      limit: _limit,
+    );
   }
 
   Future<void> _loadRoles() async {
@@ -41,6 +80,7 @@ class _StudentsPageState extends State<StudentsPage> {
   @override
   void dispose() {
     _searchController.dispose();
+    _scrollController.dispose();
     super.dispose();
   }
 
@@ -107,10 +147,7 @@ class _StudentsPageState extends State<StudentsPage> {
                               Icons.clear,
                               color: AppColors.lightTextSecondary,
                             ),
-                            onPressed: () {
-                              _searchController.clear();
-                              setState(() {});
-                            },
+                            onPressed: _resetSearch,
                           )
                         : null,
                     border: InputBorder.none,
@@ -119,7 +156,13 @@ class _StudentsPageState extends State<StudentsPage> {
                       vertical: 16,
                     ),
                   ),
-                  onChanged: (_) => setState(() {}),
+                  onChanged: (value) {
+                    setState(() {
+                      _currentQuery = value;
+                      _limit = 20;
+                      _updateStream();
+                    });
+                  },
                 ),
               ),
               const SizedBox(height: 20),
@@ -138,15 +181,9 @@ class _StudentsPageState extends State<StudentsPage> {
                       crossAxisCount = 2;
                     final totalSpacing = spacing * (crossAxisCount - 1);
                     final tileWidth = (width - totalSpacing) / crossAxisCount;
-                    // Altura desejada ajustada para evitar overflow do conteúdo interno
-                    final desiredHeight = isTablet ? 240.0 : 260.0;
-                    final aspectRatio = tileWidth / desiredHeight;
 
                     return StreamBuilder<List<Student>>(
-                      stream: _repo.streamStudents(
-                        nameQuery: _searchController.text,
-                        activeOnly: true,
-                      ),
+                      stream: _studentsStream,
                       builder: (context, snapshot) {
                         if (snapshot.connectionState ==
                             ConnectionState.waiting) {
@@ -194,18 +231,34 @@ class _StudentsPageState extends State<StudentsPage> {
                             ),
                           );
                         }
-                        return GridView.builder(
-                          gridDelegate:
-                              SliverGridDelegateWithFixedCrossAxisCount(
-                                crossAxisCount: crossAxisCount,
-                                crossAxisSpacing: spacing,
-                                mainAxisSpacing: spacing,
-                                childAspectRatio: aspectRatio,
-                              ),
-                          itemCount: students.length,
+                        return ListView.builder(
+                          controller: _scrollController,
+                          padding: EdgeInsets.symmetric(
+                            horizontal: spacing,
+                            vertical: spacing,
+                          ),
+                          itemCount:
+                              students.length +
+                              (students.length >= _limit ? 1 : 0),
                           itemBuilder: (context, index) {
+                            if (index == students.length) {
+                              return const Padding(
+                                padding: EdgeInsets.all(16.0),
+                                child: Center(
+                                  child: CircularProgressIndicator(
+                                    color: AppColors.primary,
+                                  ),
+                                ),
+                              );
+                            }
                             final s = students[index];
-                            return _StudentCard(student: s);
+                            return Padding(
+                              padding: const EdgeInsets.only(bottom: 16.0),
+                              child: _StudentCard(
+                                student: s,
+                                query: _currentQuery,
+                              ),
+                            );
                           },
                         );
                       },
@@ -222,8 +275,9 @@ class _StudentsPageState extends State<StudentsPage> {
 }
 
 class _StudentCard extends StatelessWidget {
-  const _StudentCard({required this.student});
+  const _StudentCard({required this.student, required this.query});
   final Student student;
+  final String query;
 
   Color _capColor(CapLevel level, BuildContext context) {
     switch (level) {
@@ -304,8 +358,6 @@ class _StudentCard extends StatelessWidget {
                       children: [
                         Text(
                           student.name,
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
                           style: textTheme.titleMedium?.copyWith(
                             fontWeight: FontWeight.bold,
                             color: AppColors.lightTextPrimary,
@@ -342,9 +394,10 @@ class _StudentCard extends StatelessWidget {
                     ),
                 ],
               ),
-              const SizedBox(height: 10),
+              if (query.isNotEmpty) _buildMatchBadge(context),
+              const SizedBox(height: 8),
               const Divider(height: 1, color: AppColors.lightDivider),
-              const SizedBox(height: 10),
+              const SizedBox(height: 8),
               // Informações de contato
               _InfoRow(icon: Icons.phone_outlined, text: student.phone),
               const SizedBox(height: 4),
@@ -378,6 +431,69 @@ class _StudentCard extends StatelessWidget {
               ),
             ],
           ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMatchBadge(BuildContext context) {
+    if (query.isEmpty) return const SizedBox.shrink();
+
+    final cleanQuery = query.replaceAll(RegExp(r'[^\d]'), '');
+    final matchStudentCpf =
+        student.studentCpf
+            ?.replaceAll(RegExp(r'[^\d]'), '')
+            .contains(cleanQuery) ??
+        false;
+    final matchGuardianCpf =
+        student.guardianCpf
+            ?.replaceAll(RegExp(r'[^\d]'), '')
+            .contains(cleanQuery) ??
+        false;
+    final matchPhone = student.phone
+        .replaceAll(RegExp(r'[^\d]'), '')
+        .contains(cleanQuery);
+
+    String? label;
+    IconData? icon;
+
+    if (cleanQuery.isNotEmpty) {
+      if (matchStudentCpf) {
+        label = 'Match: CPF Aluno';
+        icon = Icons.badge_outlined;
+      } else if (matchGuardianCpf) {
+        label = 'Match: CPF Responsável';
+        icon = Icons.family_restroom_outlined;
+      } else if (matchPhone) {
+        label = 'Match: Telefone';
+        icon = Icons.phone_android_outlined;
+      }
+    }
+
+    if (label == null) return const SizedBox.shrink();
+
+    return Padding(
+      padding: const EdgeInsets.only(top: 8),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        decoration: BoxDecoration(
+          color: AppColors.primary.withOpacity(0.1),
+          borderRadius: BorderRadius.circular(6),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, size: 12, color: AppColors.primary),
+            const SizedBox(width: 4),
+            Text(
+              label,
+              style: const TextStyle(
+                fontSize: 10,
+                fontWeight: FontWeight.bold,
+                color: AppColors.primary,
+              ),
+            ),
+          ],
         ),
       ),
     );
